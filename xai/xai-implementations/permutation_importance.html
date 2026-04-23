@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Permutation Feature Importance - Interactive Demo</title>
+    <script defer src="https://pyscript.net/latest/pyscript.js"></script>
+    <link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #05080A;
+            color: #E8E4DC;
+            line-height: 1.6;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 32px 20px; }
+        header {
+            border-bottom: 1px solid #1E3A2F;
+            padding: 32px 0;
+            margin-bottom: 32px;
+        }
+        h1 {
+            font-size: 2.5em;
+            color: #c6f91f;
+            margin-bottom: 12px;
+        }
+        .subtitle { font-size: 1.1em; color: #999; max-width: 700px; }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 24px;
+            padding: 8px 16px;
+            background: #0E1A15;
+            border: 1px solid #1E3A2F;
+            border-radius: 6px;
+            color: #D4A843;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .back-link:hover { border-color: #D4A843; }
+
+        .content-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin: 32px 0; }
+        @media (max-width: 900px) { .content-grid { grid-template-columns: 1fr; } }
+
+        .card {
+            background: #0E1A15;
+            border: 1px solid #1E3A2F;
+            border-radius: 12px;
+            padding: 24px;
+            transition: border-color 0.2s;
+        }
+        .card:hover { border-color: #D4A843; }
+        .card h2 { color: #D4A843; margin-bottom: 16px; font-size: 1.3em; }
+        .card h3 { color: #c6f91f; margin-top: 20px; margin-bottom: 10px; font-size: 1em; }
+
+        .input-group {
+            margin-bottom: 16px;
+        }
+        .input-group label {
+            display: block;
+            font-size: 0.9em;
+            color: #999;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+        .input-group input,
+        .input-group select {
+            width: 100%;
+            padding: 10px;
+            background: #132B22;
+            border: 1px solid #1E3A2F;
+            border-radius: 6px;
+            color: #E8E4DC;
+            font-size: 0.95em;
+        }
+        .input-group input:focus,
+        .input-group select:focus {
+            outline: none;
+            border-color: #D4A843;
+            background: #132B22;
+        }
+
+        button {
+            padding: 12px 24px;
+            background: #D4A843;
+            color: #080D0B;
+            border: none;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.95em;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+        }
+        button:hover { background: #E8C76A; transform: translateY(-2px); }
+        button:active { transform: translateY(0); }
+
+        .plot-container {
+            background: #132B22;
+            border: 1px solid #1E3A2F;
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 16px;
+            min-height: 400px;
+        }
+
+        .explanation {
+            background: rgba(212, 168, 67, 0.05);
+            border-left: 3px solid #D4A843;
+            padding: 16px;
+            border-radius: 0 8px 8px 0;
+            margin: 20px 0;
+            font-size: 0.95em;
+            line-height: 1.7;
+        }
+
+        .info-box {
+            background: rgba(198, 249, 31, 0.05);
+            border-left: 3px solid #c6f91f;
+            padding: 16px;
+            border-radius: 0 8px 8px 0;
+            margin: 16px 0;
+            font-size: 0.9em;
+        }
+
+        .code-block {
+            background: #132B22;
+            border: 1px solid #1E3A2F;
+            border-radius: 6px;
+            padding: 12px;
+            font-family: 'SF Mono', monospace;
+            font-size: 0.85em;
+            overflow-x: auto;
+            color: #82aaff;
+            margin: 12px 0;
+            line-height: 1.5;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin: 16px 0;
+        }
+        .stat {
+            background: #132B22;
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid #1E3A2F;
+            text-align: center;
+        }
+        .stat-value { font-size: 1.5em; color: #D4A843; font-weight: 700; }
+        .stat-label { font-size: 0.8em; color: #999; margin-top: 4px; }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 24px;
+            color: #c6f91f;
+        }
+        .loading.show { display: block; }
+        .spinner {
+            border: 3px solid #1E3A2F;
+            border-top-color: #D4A843;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 12px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .error {
+            background: rgba(231, 76, 60, 0.1);
+            border-left: 3px solid #E74C3C;
+            padding: 12px;
+            border-radius: 0 6px 6px 0;
+            color: #E74C3C;
+            margin: 12px 0;
+            display: none;
+        }
+        .error.show { display: block; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+            font-size: 0.9em;
+        }
+        th {
+            background: #132B22;
+            color: #D4A843;
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #1E3A2F;
+            font-weight: 600;
+        }
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #1E3A2F;
+            color: #999;
+        }
+        tr:hover { background: #132B22; }
+
+        .step { margin-bottom: 32px; }
+        .step-num {
+            display: inline-block;
+            width: 32px;
+            height: 32px;
+            background: #D4A843;
+            color: #080D0B;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 32px;
+            font-weight: 700;
+            margin-right: 12px;
+        }
+
+        .footer {
+            border-top: 1px solid #1E3A2F;
+            margin-top: 60px;
+            padding-top: 24px;
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a href="../index.html" class="back-link">← Back to XAI Course</a>
+
+    <header>
+        <h1>🎯 Permutation Feature Importance</h1>
+        <p class="subtitle">
+            Interactive demonstration of how Permutation Feature Importance measures feature importance by shuffling each feature and observing the drop in model performance.
+        </p>
+    </header>
+
+    <!-- Theory Section -->
+    <section>
+        <h2 style="color: #c6f91f; font-size: 1.8em; margin-bottom: 24px;">How It Works</h2>
+        
+        <div class="content-grid">
+            <div class="card">
+                <h3>📊 The Algorithm</h3>
+                <div class="step">
+                    <span class="step-num">1</span>
+                    <strong>Train Model:</strong> Fit your ML model on training data
+                </div>
+                <div class="step">
+                    <span class="step-num">2</span>
+                    <strong>Baseline:</strong> Get baseline performance (R², accuracy, etc.)
+                </div>
+                <div class="step">
+                    <span class="step-num">3</span>
+                    <strong>Permute:</strong> Shuffle one feature's values randomly
+                </div>
+                <div class="step">
+                    <span class="step-num">4</span>
+                    <strong>Re-evaluate:</strong> Measure performance with shuffled feature
+                </div>
+                <div class="step">
+                    <span class="step-num">5</span>
+                    <strong>Calculate:</strong> Importance = baseline − permuted performance
+                </div>
+                <p style="color: #999; font-size: 0.9em; margin-top: 12px;">
+                    Repeat for all features. Higher drop = more important feature.
+                </p>
+            </div>
+
+            <div class="card">
+                <h3>💡 Key Intuition</h3>
+                <p style="margin-bottom: 16px;">
+                    If a feature is important, shuffling it breaks the relationship between input and output, causing performance to drop.
+                </p>
+                <p style="margin-bottom: 16px; color: #c6f91f;">
+                    Example: If "age" is crucial for predicting income, randomly scrambling ages will confuse the model and performance will plummet.
+                </p>
+                <p style="color: #999;">
+                    If a feature is unrelated, shuffling it won't matter — the model will still perform well.
+                </p>
+            </div>
+        </div>
+
+        <div class="explanation">
+            <strong>⚠️ Important Note on Correlated Features:</strong> PFI has a known limitation with highly correlated features. 
+            If two features are correlated and convey similar information, shuffling one won't reduce performance because the other 
+            still provides the same information. This can lead to underestimation of importance for redundant features.
+        </div>
+    </section>
+
+    <!-- Interactive Demo -->
+    <section style="margin: 48px 0;">
+        <h2 style="color: #c6f91f; font-size: 1.8em; margin-bottom: 24px;">🚀 Interactive Demo</h2>
+        
+        <div class="card" style="margin-bottom: 24px;">
+            <h3>Step 1: Load Data & Train Model</h3>
+            
+            <div class="input-group">
+                <label>Select Dataset:</label>
+                <select id="datasetSelect">
+                    <option value="diabetes">Diabetes Dataset (Regression)</option>
+                    <option value="breast_cancer">Breast Cancer (Classification)</option>
+                    <option value="iris">Iris Dataset (Classification)</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label>Model Type:</label>
+                <select id="modelSelect">
+                    <option value="rf">Random Forest</option>
+                    <option value="gb">Gradient Boosting</option>
+                    <option value="lr">Linear Regression</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label>Number of Permutation Repeats:</label>
+                <input type="number" id="repeatsInput" value="10" min="1" max="50">
+                <small style="color: #666; margin-top: 4px; display: block;">More repeats = more stable importance but slower</small>
+            </div>
+
+            <button onclick="runPFI()">🎬 Train Model & Calculate PFI</button>
+            <div class="error" id="errorBox"></div>
+            <div class="loading" id="loadingBox">
+                <div class="spinner"></div>
+                Calculating Permutation Feature Importance...
+                <div style="color: #999; margin-top: 8px; font-size: 0.9em;">This may take a few seconds</div>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div id="resultsSection" style="display: none;">
+            <div class="content-grid">
+                <div class="card">
+                    <h3>📈 Model Performance</h3>
+                    <div class="stats-grid">
+                        <div class="stat">
+                            <div class="stat-value" id="baselineScore">—</div>
+                            <div class="stat-label">Baseline Score</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value" id="numFeatures">—</div>
+                            <div class="stat-label">Features</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value" id="numSamples">—</div>
+                            <div class="stat-label">Samples</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>🎯 Top 3 Most Important Features</h3>
+                    <table id="topFeaturesTable">
+                        <tr>
+                            <th>Feature</th>
+                            <th>Importance</th>
+                            <th>Std Dev</th>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>📊 Feature Importance Ranking</h3>
+                <p style="font-size: 0.9em; color: #999; margin-bottom: 12px;">
+                    Sorted by importance. Error bars show standard deviation across repeats.
+                </p>
+                <div class="plot-container" id="importancePlot"></div>
+            </div>
+
+            <div class="card">
+                <h3>💾 Detailed Results</h3>
+                <table id="detailedTable">
+                    <tr>
+                        <th>Feature Name</th>
+                        <th>Mean Importance</th>
+                        <th>Std Deviation</th>
+                        <th>Min</th>
+                        <th>Max</th>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="info-box">
+                <strong>📌 How to Interpret:</strong>
+                <ul style="margin-left: 20px; margin-top: 8px;">
+                    <li>Positive values = important features (shuffling hurts performance)</li>
+                    <li>Near-zero or negative = unimportant or correlated features</li>
+                    <li>Larger error bars = less stable importance (more variance across repeats)</li>
+                    <li>Standard deviation shows how much importance varies between shuffles</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Code Section -->
+    <section style="margin: 48px 0;">
+        <h2 style="color: #c6f91f; font-size: 1.8em; margin-bottom: 24px;">💻 Implementation Code</h2>
+        
+        <div class="card">
+            <h3>Python Implementation (Scikit-learn)</h3>
+            <div class="code-block">from sklearn.inspection import permutation_importance
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.datasets import load_diabetes
+
+# Load data
+X, y = load_diabetes(return_X_y=True)
+X_train, X_test, y_train, y_test = train_test_split(X, y)
+
+# Train model
+model = RandomForestRegressor(random_state=42)
+model.fit(X_train, y_train)
+
+# Calculate PFI
+result = permutation_importance(
+    model, X_test, y_test,
+    n_repeats=10,
+    random_state=42
+)
+
+# Results
+print(result.importances_mean)
+print(result.importances_std)</div>
+        </div>
+
+        <div class="card">
+            <h3>Manual Implementation (From Scratch)</h3>
+            <div class="code-block">import numpy as np
+
+def permutation_importance_manual(model, X, y, n_repeats=10):
+    baseline = model.score(X, y)
+    importances = []
+    
+    for feature_idx in range(X.shape[1]):
+        feature_importances = []
+        
+        for _ in range(n_repeats):
+            X_permuted = X.copy()
+            np.random.shuffle(X_permuted[:, feature_idx])
+            
+            permuted_score = model.score(X_permuted, y)
+            importance = baseline - permuted_score
+            feature_importances.append(importance)
+        
+        importances.append(np.mean(feature_importances))
+    
+    return np.array(importances)</div>
+        </div>
+    </section>
+
+    <!-- PyScript Implementation -->
+    <py-script>
+import numpy as np
+import pandas as pd
+from sklearn.datasets import load_diabetes, load_breast_cancer, load_iris
+from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier, GradientBoostingRegressor, GradientBoostingClassifier
+from sklearn.linear_model import LinearRegression, LogisticRegression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import r2_score, accuracy_score
+import json
+
+def load_data(dataset_name):
+    if dataset_name == "diabetes":
+        data = load_diabetes()
+        return data.data, data.target, data.feature_names, "regression"
+    elif dataset_name == "breast_cancer":
+        data = load_breast_cancer()
+        return data.data, data.target, data.feature_names, "classification"
+    else:  # iris
+        data = load_iris()
+        return data.data, data.target, data.feature_names, "classification"
+
+def get_model(model_type, task_type):
+    if task_type == "regression":
+        if model_type == "rf":
+            return RandomForestRegressor(n_estimators=50, random_state=42)
+        elif model_type == "gb":
+            return GradientBoostingRegressor(n_estimators=50, random_state=42)
+        else:
+            return LinearRegression()
+    else:  # classification
+        if model_type == "rf":
+            return RandomForestClassifier(n_estimators=50, random_state=42)
+        elif model_type == "gb":
+            return GradientBoostingClassifier(n_estimators=50, random_state=42)
+        else:
+            return LogisticRegression(max_iter=200)
+
+def calculate_pfi(model, X_test, y_test, feature_names, n_repeats=10, task_type="regression"):
+    # Baseline score
+    if task_type == "regression":
+        baseline = r2_score(y_test, model.predict(X_test))
+        metric_name = "R²"
+    else:
+        baseline = accuracy_score(y_test, model.predict(X_test))
+        metric_name = "Accuracy"
+    
+    n_features = X_test.shape[1]
+    importances_all = np.zeros((n_features, n_repeats))
+    
+    for feature_idx in range(n_features):
+        for repeat in range(n_repeats):
+            X_permuted = X_test.copy()
+            np.random.seed(42 + repeat)
+            np.random.shuffle(X_permuted[:, feature_idx])
+            
+            if task_type == "regression":
+                permuted_score = r2_score(y_test, model.predict(X_permuted))
+            else:
+                permuted_score = accuracy_score(y_test, model.predict(X_permuted))
+            
+            importance = baseline - permuted_score
+            importances_all[feature_idx, repeat] = importance
+    
+    importances_mean = np.mean(importances_all, axis=1)
+    importances_std = np.std(importances_all, axis=1)
+    
+    return {
+        "baseline": float(baseline),
+        "importances_mean": importances_mean.tolist(),
+        "importances_std": importances_std.tolist(),
+        "feature_names": list(feature_names),
+        "metric_name": metric_name
+    }
+
+# Store globally for JavaScript access
+global_results = {}
+
+def run_pfi_impl(dataset, model_type, n_repeats):
+    global global_results
+    
+    try:
+        X, y, feature_names, task_type = load_data(dataset)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        
+        model = get_model(model_type, task_type)
+        model.fit(X_train, y_train)
+        
+        results = calculate_pfi(model, X_test, y_test, feature_names, n_repeats, task_type)
+        results["n_samples"] = X_test.shape[0]
+        results["n_features"] = X_test.shape[1]
+        
+        global_results = results
+        return json.dumps(results)
+    except Exception as e:
+        return json.dumps({"error": str(e)})
+    </py-script>
+
+    <script>
+    async function runPFI() {
+        const dataset = document.getElementById("datasetSelect").value;
+        const modelType = document.getElementById("modelSelect").value;
+        const nRepeats = parseInt(document.getElementById("repeatsInput").value);
+        
+        document.getElementById("loadingBox").classList.add("show");
+        document.getElementById("errorBox").classList.remove("show");
+        
+        try {
+            const resultJson = await pyodide.runPythonAsync(`
+                from js import run_pfi_impl
+                run_pfi_impl('${dataset}', '${modelType}', ${nRepeats})
+            `);
+            
+            const results = JSON.parse(resultJson);
+            
+            if (results.error) {
+                showError(results.error);
+                document.getElementById("loadingBox").classList.remove("show");
+                return;
+            }
+            
+            displayResults(results);
+        } catch (error) {
+            showError("Error: " + error.message);
+        }
+        
+        document.getElementById("loadingBox").classList.remove("show");
+    }
+    
+    function displayResults(results) {
+        document.getElementById("resultsSection").style.display = "block";
+        
+        // Stats
+        document.getElementById("baselineScore").textContent = results.baseline.toFixed(4);
+        document.getElementById("numFeatures").textContent = results.n_features;
+        document.getElementById("numSamples").textContent = results.n_samples;
+        
+        // Sort by importance
+        const sorted = results.feature_names.map((name, i) => ({
+            name,
+            importance: results.importances_mean[i],
+            std: results.importances_std[i]
+        })).sort((a, b) => b.importance - a.importance);
+        
+        // Top 3 table
+        const topTable = document.getElementById("topFeaturesTable");
+        topTable.innerHTML = "<tr><th>Feature</th><th>Importance</th><th>Std Dev</th></tr>";
+        sorted.slice(0, 3).forEach(item => {
+            topTable.innerHTML += `<tr>
+                <td>${item.name}</td>
+                <td>${item.importance.toFixed(6)}</td>
+                <td>${item.std.toFixed(6)}</td>
+            </tr>`;
+        });
+        
+        // Detailed table
+        const detailedTable = document.getElementById("detailedTable");
+        detailedTable.innerHTML = "<tr><th>Feature Name</th><th>Mean Importance</th><th>Std Deviation</th><th>Min</th><th>Max</th></tr>";
+        sorted.forEach((item, i) => {
+            detailedTable.innerHTML += `<tr>
+                <td>${item.name}</td>
+                <td>${item.importance.toFixed(6)}</td>
+                <td>${item.std.toFixed(6)}</td>
+                <td>${(item.importance - 2 * item.std).toFixed(6)}</td>
+                <td>${(item.importance + 2 * item.std).toFixed(6)}</td>
+            </tr>`;
+        });
+        
+        // Plot
+        const trace = {
+            y: sorted.map(d => d.name),
+            x: sorted.map(d => d.importance),
+            error_x: {
+                type: 'data',
+                array: sorted.map(d => d.std),
+                visible: true
+            },
+            type: 'bar',
+            orientation: 'h',
+            marker: { color: '#D4A843' }
+        };
+        
+        const layout = {
+            title: 'Permutation Feature Importance',
+            xaxis: { title: 'Importance (' + results.metric_name + ' Drop)' },
+            yaxis: { title: 'Feature' },
+            plot_bgcolor: '#132B22',
+            paper_bgcolor: '#0E1A15',
+            font: { color: '#E8E4DC' },
+            margin: { l: 150, r: 50, t: 50, b: 50 }
+        };
+        
+        Plotly.newPlot('importancePlot', [trace], layout, { responsive: true });
+        
+        window.scrollTo({ top: document.getElementById("resultsSection").offsetTop - 100, behavior: 'smooth' });
+    }
+    
+    function showError(message) {
+        const errorBox = document.getElementById("errorBox");
+        errorBox.textContent = "❌ " + message;
+        errorBox.classList.add("show");
+    }
+    </script>
+
+    <div class="footer">
+        <p>
+            <strong>Learn more:</strong> 
+            <a href="https://scikit-learn.org/stable/modules/inspection.html#permutation-importance" 
+               style="color: #D4A843; text-decoration: none;">
+               Scikit-learn Permutation Importance Docs
+            </a> 
+            | 
+            <a href="../index.html" style="color: #D4A843; text-decoration: none;">
+               Back to XAI Course
+            </a>
+        </p>
+    </div>
+</div>
+
+</body>
+</html>
