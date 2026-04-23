@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Permutation Feature Importance Demo</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        canvas { width: 100%; height: 400px; }
+    </style>
+</head>
+<body>
+    <h1>Permutation Feature Importance Demo</h1>
+    <div id="inputArea">
+        <h2>Upload Data</h2>
+        <input type="file" id="dataInput" accept=".csv">
+        <button id="runAnalysis">Run Analysis</button>
+    </div>
+    <canvas id="importanceChart"></canvas>
+    <script>
+        $(document).ready(function() {
+            $('#runAnalysis').click(function() {
+                const fileInput = document.getElementById('dataInput');
+                const file = fileInput.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        const data = event.target.result;
+                        // Process data and calculate feature importance
+                        // This part will depend on your backend implementation
+                        const featureImportance = calculateFeatureImportance(data);
+                        updateChart(featureImportance);
+                    };
+                    reader.readAsText(file);
+                } else {
+                    alert('Please upload a data file.');
+                }
+            });
+
+            function calculateFeatureImportance(data) {
+                // Mock function for demonstration
+                // Replace with actual calculation logic
+                return {
+                    labels: ['Feature 1', 'Feature 2', 'Feature 3'],
+                    values: [0.2, 0.5, 0.3]
+                };
+            }
+
+            function updateChart(featureImportance) {
+                const ctx = document.getElementById('importanceChart').getContext('2d');
+                const chart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: featureImportance.labels,
+                        datasets: [{
+                            label: 'Feature Importance',
+                            data: featureImportance.values,
+                            backgroundColor: 'rgba(75, 192, 192, 0.6)'
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: { beginAtZero: true }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
