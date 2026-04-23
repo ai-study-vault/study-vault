@@ -1,0 +1,2091 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Computer Science Research Methods</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+:root{--bg:#080D0B;--bg2:#0E1A15;--card:#132B22;--card2:#1A382D;--accent:#D4A843;--accent2:#E8C76A;--green:#2ECC71;--red:#E74C3C;--fg:#E8E4DC;--fg2:#C5C0B6;--muted:#6B7F74;--border:#1E3A2F;--glass:rgba(19,43,34,0.85)}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'Source Sans 3',sans-serif;background:var(--bg);color:var(--fg);min-height:100vh;overflow-x:hidden}
+h1,h2,h3,h4{font-family:'Playfair Display',serif;font-weight:700}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--accent);border-radius:3px}
+
+/* Background atmosphere */
+.bg-glow{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.bg-glow::before{content:'';position:absolute;top:-20%;left:-10%;width:50%;height:50%;background:radial-gradient(circle,rgba(212,168,67,0.06) 0%,transparent 70%);animation:floatGlow 15s ease-in-out infinite}
+.bg-glow::after{content:'';position:absolute;bottom:-20%;right:-10%;width:60%;height:60%;background:radial-gradient(circle,rgba(46,204,113,0.04) 0%,transparent 70%);animation:floatGlow 20s ease-in-out infinite reverse}
+@keyframes floatGlow{0%,100%{transform:translate(0,0)}50%{transform:translate(40px,30px)}}
+
+/* Layout */
+.app{display:flex;min-height:100vh;position:relative;z-index:1}
+.sidebar{width:280px;min-width:280px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:50;transition:transform .3s}
+.sidebar-header{padding:24px 20px 16px;border-bottom:1px solid var(--border)}
+.sidebar-header h2{font-size:18px;color:var(--accent);letter-spacing:0.5px}
+.sidebar-header p{font-size:12px;color:var(--muted);margin-top:4px}
+.sidebar-nav{flex:1;overflow-y:auto;padding:12px 0}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;transition:all .2s;color:var(--fg2);font-size:14px;position:relative;border-left:3px solid transparent}
+.nav-item:hover{background:var(--card);color:var(--fg)}
+.nav-item.active{background:var(--card);color:var(--accent);border-left-color:var(--accent)}
+.nav-item .num{width:24px;height:24px;border-radius:6px;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--muted);flex-shrink:0}
+.nav-item.active .num{background:var(--accent);color:var(--bg)}
+.nav-item.completed .num{background:var(--green);color:#fff}
+.nav-item.special{color:var(--accent)}
+.nav-item.special .num{background:var(--accent);color:var(--bg)}
+
+.sidebar-footer{padding:16px 20px;border-top:1px solid var(--border)}
+.progress-bar{height:6px;background:var(--card);border-radius:3px;overflow:hidden;margin-top:8px}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--accent));border-radius:3px;transition:width .5s ease}
+.progress-text{font-size:11px;color:var(--muted);margin-top:4px}
+
+.main{flex:1;margin-left:280px;padding:0}
+.top-bar{position:sticky;top:0;z-index:40;background:var(--glass);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:16px 32px;display:flex;align-items:center;gap:16px}
+.search-box{flex:1;max-width:480px;position:relative}
+.search-box input{width:100%;padding:10px 16px 10px 40px;background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--fg);font-size:14px;outline:none;transition:border .2s}
+.search-box input:focus{border-color:var(--accent)}
+.search-box i{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px}
+.search-results{position:absolute;top:100%;left:0;right:0;background:var(--card);border:1px solid var(--border);border-radius:10px;margin-top:4px;max-height:400px;overflow-y:auto;display:none;z-index:100}
+.search-results.show{display:block}
+.search-result-item{padding:12px 16px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .15s}
+.search-result-item:hover{background:var(--card2)}
+.search-result-item .sr-module{font-size:11px;color:var(--accent);font-weight:600}
+.search-result-item .sr-text{font-size:13px;color:var(--fg2);margin-top:2px}
+.search-result-item mark{background:rgba(212,168,67,0.3);color:var(--accent);border-radius:2px;padding:0 2px}
+.btn-dl{padding:8px 16px;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--fg2);font-size:13px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.btn-dl:hover{border-color:var(--accent);color:var(--accent)}
+.menu-toggle{display:none;padding:8px;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--fg);cursor:pointer;font-size:18px}
+
+.content{padding:32px;max-width:960px;margin:0 auto}
+
+/* Module pages */
+.module-header{margin-bottom:32px;animation:fadeUp .5s ease}
+.module-header .mod-num{font-size:13px;color:var(--accent);font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+.module-header h1{font-size:36px;line-height:1.2;color:var(--fg)}
+.module-header .mod-desc{font-size:16px;color:var(--fg2);margin-top:12px;line-height:1.7;max-width:700px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+/* Tabs */
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:24px;overflow-x:auto;flex-wrap:nowrap}
+.tab{padding:10px 18px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
+.tab:hover{color:var(--fg2)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab-content{display:none;animation:fadeUp .3s ease}
+.tab-content.active{display:block}
+
+/* Cards */
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:20px}
+.card h3{font-size:18px;color:var(--fg);margin-bottom:12px}
+.card p,.card li{font-size:14px;color:var(--fg2);line-height:1.8}
+.card ul,.card ol{padding-left:20px;margin-top:8px}
+.card li{margin-bottom:6px}
+
+/* Quote block */
+.quote-block{border-left:3px solid var(--accent);padding:16px 20px;background:rgba(212,168,67,0.05);border-radius:0 10px 10px 0;margin:16px 0}
+.quote-block p{font-style:italic;font-size:15px;color:var(--fg2);line-height:1.7}
+.quote-block .author{font-style:normal;font-size:12px;color:var(--accent);margin-top:8px;font-weight:600}
+
+/* Key point */
+.key-point{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;background:rgba(46,204,113,0.06);border:1px solid rgba(46,204,113,0.15);border-radius:10px;margin:12px 0}
+.key-point i{color:var(--green);margin-top:3px;flex-shrink:0}
+.key-point p{font-size:14px;color:var(--fg2);line-height:1.6}
+
+/* Warning block */
+.warn-block{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;background:rgba(231,76,60,0.06);border:1px solid rgba(231,76,60,0.15);border-radius:10px;margin:12px 0}
+.warn-block i{color:var(--red);margin-top:3px;flex-shrink:0}
+.warn-block p{font-size:14px;color:var(--fg2);line-height:1.6}
+
+/* Reference list */
+.ref-list{list-style:none;padding:0}
+.ref-list li{padding:10px 14px;background:var(--bg2);border-radius:8px;margin-bottom:8px;font-size:13px;color:var(--fg2);line-height:1.6;border-left:3px solid var(--border)}
+.ref-list li:hover{border-left-color:var(--accent)}
+
+/* Quiz */
+.quiz-container{max-width:700px}
+.quiz-q{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;transition:border-color .2s}
+.quiz-q.correct{border-color:var(--green)}
+.quiz-q.wrong{border-color:var(--red)}
+.quiz-q .q-text{font-size:15px;font-weight:600;color:var(--fg);margin-bottom:14px}
+.quiz-q .q-num{color:var(--accent);font-size:13px;font-weight:700}
+.quiz-options{display:flex;flex-direction:column;gap:8px}
+.quiz-opt{padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:14px;color:var(--fg2);transition:all .2s}
+.quiz-opt:hover{border-color:var(--accent);color:var(--fg)}
+.quiz-opt.selected{border-color:var(--accent);background:rgba(212,168,67,0.1);color:var(--accent)}
+.quiz-opt.correct-answer{border-color:var(--green);background:rgba(46,204,113,0.1);color:var(--green)}
+.quiz-opt.wrong-answer{border-color:var(--red);background:rgba(231,76,60,0.1);color:var(--red)}
+.quiz-opt.disabled{pointer-events:none}
+.quiz-feedback{margin-top:10px;font-size:13px;padding:8px 12px;border-radius:6px;display:none}
+.quiz-feedback.show{display:block}
+.quiz-feedback.correct-fb{background:rgba(46,204,113,0.1);color:var(--green)}
+.quiz-feedback.wrong-fb{background:rgba(231,76,60,0.1);color:var(--red)}
+.quiz-score{background:var(--card);border:1px solid var(--accent);border-radius:12px;padding:20px;text-align:center;display:none}
+.quiz-score.show{display:block}
+.quiz-score h3{color:var(--accent);font-size:22px}
+.quiz-score p{color:var(--fg2);font-size:15px;margin-top:6px}
+.btn-quiz{padding:10px 24px;background:var(--accent);color:var(--bg);border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;transition:all .2s;margin-top:16px}
+.btn-quiz:hover{background:var(--accent2);transform:translateY(-1px)}
+
+/* Exam */
+.exam-header{text-align:center;padding:40px 0;margin-bottom:32px}
+.exam-header h1{font-size:40px;color:var(--accent)}
+.exam-header p{font-size:16px;color:var(--fg2);margin-top:8px;max-width:600px;margin-left:auto;margin-right:auto;line-height:1.6}
+.exam-timer{display:flex;align-items:center;justify-content:center;gap:8px;font-size:20px;color:var(--accent);font-weight:700;margin-top:16px}
+.exam-timer i{font-size:18px}
+.exam-instructions{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:24px}
+.exam-instructions h3{color:var(--accent);margin-bottom:12px}
+.exam-result{background:var(--card);border:2px solid var(--accent);border-radius:16px;padding:40px;text-align:center;display:none}
+.exam-result.show{display:block}
+.exam-result .big-score{font-size:64px;font-weight:900;color:var(--accent);font-family:'Playfair Display',serif}
+.exam-result .grade{font-size:20px;color:var(--fg);margin-top:8px}
+
+/* Concept Note Form */
+.cn-form{max-width:800px}
+.cn-section{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:20px}
+.cn-section h3{color:var(--accent);font-size:17px;margin-bottom:6px}
+.cn-section .cn-hint{font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.5}
+.cn-section label{display:block;font-size:13px;font-weight:600;color:var(--fg2);margin-bottom:6px}
+.cn-section textarea,.cn-section input[type="text"],.cn-section select{width:100%;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--fg);font-size:14px;font-family:'Source Sans 3',sans-serif;outline:none;transition:border .2s;resize:vertical}
+.cn-section textarea:focus,.cn-section input:focus,.cn-section select:focus{border-color:var(--accent)}
+.cn-section textarea{min-height:100px}
+.cn-section .obj-item{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.cn-section .obj-item input{flex:1}
+.btn-cn{padding:12px 28px;background:var(--accent);color:var(--bg);border:none;border-radius:8px;font-weight:700;font-size:15px;cursor:pointer;transition:all .2s}
+.btn-cn:hover{background:var(--accent2);transform:translateY(-1px)}
+.btn-preview{padding:10px 20px;background:var(--card2);color:var(--fg2);border:1px solid var(--border);border-radius:8px;font-size:14px;cursor:pointer;transition:all .2s}
+.btn-preview:hover{border-color:var(--accent);color:var(--accent)}
+
+/* Preview modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:200;display:none;align-items:center;justify-content:center;padding:32px}
+.modal-overlay.show{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:16px;max-width:800px;width:100%;max-height:85vh;overflow-y:auto;padding:40px}
+.modal h2{color:var(--accent);margin-bottom:24px;font-size:24px}
+.modal h4{color:var(--fg);margin:20px 0 8px;font-size:16px}
+.modal p{color:var(--fg2);font-size:14px;line-height:1.8;white-space:pre-wrap}
+.modal-close{position:absolute;top:16px;right:16px;width:36px;height:36px;border-radius:8px;background:var(--card);border:1px solid var(--border);color:var(--fg);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
+.modal-close:hover{border-color:var(--red);color:var(--red)}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;right:24px;padding:14px 20px;background:var(--card);border:1px solid var(--accent);border-radius:10px;color:var(--fg);font-size:14px;z-index:300;transform:translateY(100px);opacity:0;transition:all .3s ease;display:flex;align-items:center;gap:8px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast i{color:var(--accent)}
+
+/* Responsive */
+@media(max-width:900px){
+.sidebar{transform:translateX(-100%)}
+.sidebar.open{transform:translateX(0)}
+.main{margin-left:0}
+.menu-toggle{display:flex}
+.content{padding:20px}
+.module-header h1{font-size:28px}
+}
+
+/* Section divider */
+.section-divider{height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);margin:24px 0}
+
+/* Sub-heading style */
+.sub-heading{font-family:'Playfair Display',serif;font-size:20px;color:var(--fg);margin:24px 0 12px;padding-left:12px;border-left:3px solid var(--accent)}
+
+/* Inline tag */
+.tag{display:inline-block;padding:3px 10px;background:var(--card2);border-radius:6px;font-size:11px;font-weight:600;color:var(--accent);margin:2px}
+
+/* Table */
+.data-table{width:100%;border-collapse:collapse;font-size:13px}
+.data-table th{text-align:left;padding:10px 12px;background:var(--card2);color:var(--accent);font-weight:600;border-bottom:1px solid var(--border)}
+.data-table td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--fg2)}
+.data-table tr:hover td{background:rgba(212,168,67,0.03)}
+
+/* Footer nav */
+.module-nav{display:flex;justify-content:space-between;margin-top:40px;padding-top:24px;border-top:1px solid var(--border)}
+.module-nav button{padding:10px 20px;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--fg2);cursor:pointer;font-size:14px;transition:all .2s;display:flex;align-items:center;gap:6px}
+.module-nav button:hover{border-color:var(--accent);color:var(--accent)}
+
+/* Animated particles */
+.particle{position:fixed;width:2px;height:2px;background:var(--accent);border-radius:50%;pointer-events:none;z-index:0;opacity:0;animation:particleFade 8s ease-in-out infinite}
+@keyframes particleFade{0%,100%{opacity:0;transform:translateY(0)}50%{opacity:0.4;transform:translateY(-40px)}}
+</style>
+</head>
+<body>
+
+<div class="bg-glow"></div>
+<div id="particles"></div>
+
+<div class="app">
+<aside class="sidebar" id="sidebar">
+<div class="sidebar-header">
+<h2><i class="fas fa-flask" style="margin-right:6px"></i> CS Research Methods</h2>
+<p>Interactive Course &middot; 10 Modules</p>
+</div>
+<nav class="sidebar-nav" id="sideNav"></nav>
+<div class="sidebar-footer">
+<div style="font-size:12px;color:var(--muted)">Course Progress</div>
+<div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+<div class="progress-text" id="progressText">0 / 10 modules completed</div>
+</div>
+</aside>
+
+<main class="main">
+<div class="top-bar">
+<button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')"><i class="fas fa-bars"></i></button>
+<div class="search-box">
+<i class="fas fa-search"></i>
+<input type="text" id="searchInput" placeholder="Search modules, concepts, quotes..." autocomplete="off">
+<div class="search-results" id="searchResults"></div>
+</div>
+<button class="btn-dl" onclick="downloadNotes()"><i class="fas fa-download"></i> Study Notes</button>
+</div>
+<div class="content" id="mainContent"></div>
+</main>
+</div>
+
+<div class="modal-overlay" id="previewModal">
+<div class="modal" style="position:relative">
+<button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+<div id="modalContent"></div>
+</div>
+</div>
+
+<div class="toast" id="toast"><i class="fas fa-check-circle"></i><span id="toastMsg"></span></div>
+
+<script>
+// ===== MODULE DATA =====
+const MODULES = [
+{
+id:1, title:"Introduction to Research in Computer Science",
+desc:"Understanding what research means, its characteristics, motivations, and the unique challenges and opportunities in the CS research landscape.",
+notes:[
+{heading:"What is Research?",
+body:`Research is fundamentally a voyage of discovery — a systematic, rigorous process of generating new knowledge that did not exist before. The word originates from the Old French <em>recerchier</em>, meaning "to search again," which implicitly acknowledges that prior searches were not exhaustive and a deeper investigation is warranted.
+
+In the scientific context, research is defined as a systematic and orderly collection, organization, and analysis of data to answer a question, solve a problem, or generate new knowledge that is useful in decision-making. It is not casual observation or anecdotal gathering — it follows strict methodological protocols designed to ensure the findings are credible, reproducible, and meaningful.
+
+Research should have the potential to produce sufficiently relevant results that either increase and synthesize existing knowledge or correct and integrate previous knowledge. Good reflective research produces theories and hypotheses and benefits any intellectual attempt to analyze facts and phenomena.`},
+{heading:"When is Research Considered Scientific?",
+body:`Any research endeavor is considered scientific when it meets several key criteria:
+
+<strong>1. Empirical and Measurable Evidence:</strong> The research must be based on observations and measurements that can be verified by others. It cannot rely solely on intuition, authority, or tradition.
+
+<strong>2. Systematic Procedures:</strong> It employs carefully designed procedures for observation, measurement, and experimentation. There is a clear methodology that others can follow.
+
+<strong>3. Scientific Methods:</strong> It relies on the application of established scientific methods and harnesses human curiosity within a structured framework.
+
+<strong>4. Explanatory Power:</strong> It provides scientific information and theories for the explanation of natural or artificial phenomena.
+
+<strong>5. Practical Applicability:</strong> It makes practical applications possible — the knowledge generated should eventually be usable.
+
+<strong>6. Rigorous Analysis:</strong> It ensures adequate analysis of data employing rigorous statistical or logical techniques.
+
+The chief characteristic distinguishing the scientific method from other ways of acquiring knowledge is that scientists seek to let reality speak for itself — supporting a theory when its predictions are confirmed and challenging it when predictions prove false.`},
+{heading:"Characteristics of Good Research",
+body:`Good research in any field of inquiry exhibits several essential characteristics:
+
+<strong>Focus on Priority Problems:</strong> The research should address problems that matter — issues that are significant to the field, society, or the advancement of knowledge. Trivial questions, no matter how precisely answered, do not constitute valuable research.
+
+<strong>Systematic and Structured:</strong> There must be a clear, logical structure to the research process. Each step should build upon the previous one in a coherent manner.
+
+<strong>Logical:</strong> Research relies on the manipulation of ideas in a reasoned way. Arguments must follow rules of logic, and conclusions must be supported by evidence.
+
+<strong>Reductive:</strong> Findings should be synthesized and made available in a form that prevents unnecessary repetition by other researchers.
+
+<strong>Replicable:</strong> Other researchers should be able to repeat the study under similar conditions and obtain comparable results. This is a cornerstone of scientific credibility.
+
+<strong>Generative:</strong> Answering one research question should ideally generate many more questions. Good research opens new avenues of inquiry.
+
+<strong>Action-Oriented:</strong> Research should ultimately aim at solving problems through its findings, not merely describing situations.
+
+<strong>Multidisciplinary:</strong> Modern research increasingly requires an integrated approach that draws on multiple disciplines.
+
+<strong>Participatory:</strong> It should involve all concerned stakeholders, ensuring that the research addresses real needs.
+
+<strong>Timely and Cost-Effective:</strong> Research must be completed within reasonable timeframes and budgets to remain relevant.`},
+{heading:"Research Motivation",
+body:`Understanding what motivates researchers helps explain why the enterprise of science continues to thrive despite its challenges:
+
+<strong>Genuine Curiosity:</strong> The most fundamental motivation is a deep, authentic interest in understanding phenomena. This curiosity drives researchers to ask "why" and "how" questions that others might overlook.
+
+<strong>Unanswered Questions:</strong> The desire to seek answers to questions that remain unresolved is a powerful motivator. Every gap in knowledge represents an opportunity.
+
+<strong>Tool and Technique Development:</strong> Sometimes researchers are motivated by the need to modify existing tools or develop new ones to suit current needs. The availability (or lack) of certain technologies can shape research agendas.
+
+<strong>Career and Personal Goals:</strong> While not the ideal primary motivation, the pursuit of better livelihood, career development, social prestige, academic achievements, and self-gratification are realistic factors that sustain researchers through difficult periods.
+
+<strong>Societal Impact:</strong> Many researchers are driven by the desire to improve lives — whether through medical breakthroughs, better technologies, or more efficient systems. The tangible impact of research on communities provides powerful motivation.`},
+{heading:"Preparing for the Future of CS Research",
+body:`The computer science landscape is evolving at an unprecedented pace. To remain relevant and effective as a CS researcher, several strategies are essential:
+
+<strong>1. Master the Fundamentals:</strong> Core concepts in programming, data structures, algorithms, logic, and mathematics are the bedrock upon which all advanced research is built. Even as AI tools automate coding tasks, deep understanding of fundamentals enables higher-level thinking and problem-solving.
+
+<strong>2. Explore New Domains:</strong> CS now spans AI/ML, quantum computing, bioinformatics, cybersecurity, HCI, robotics, and many more. Staying aware of state-of-the-art tools, experimenting with frameworks, and applying knowledge in practice keeps researchers adaptable.
+
+<strong>3. Keep Up with Trends:</strong> Active engagement with blogs, journals, conferences, webinars, and professional communities is non-negotiable. Critical thinking is needed to separate genuine innovation from marketing hype.
+
+<strong>4. Practice Skills Continuously:</strong> Regular coding, building projects, contributing to open-source, and solving challenges maintain technical sharpness. Consistency matters more than intensity — even a small daily effort compounds over time.
+
+<strong>5. Seek Feedback and Mentorship:</strong> Collaboration and exchange of ideas are central to scientific progress. Constructive feedback from peers, mentors, and communities accelerates growth.
+
+<strong>6. Remain Curious and Adaptable:</strong> The willingness to question assumptions, evaluate tools objectively, and embrace new paradigms is what separates excellent researchers from merely competent ones.`},
+{heading:"Challenges in CS Research",
+body:`Several significant challenges continuously emerge in computer science research:
+
+<strong>Rapid Technological Changes:</strong> Today's cutting-edge approach may become obsolete tomorrow. Researchers must constantly update skills and expertise, creating pressure to publish quickly before methods become outdated.
+
+<strong>Reproducibility of Results:</strong> A growing crisis in science — ensuring that experiments can be reproduced by others requires access to the same software versions, computational platforms, datasets, and often significant computational resources.
+
+<strong>Data Privacy and Ethical Concerns:</strong> With the rise of AI and big data, challenges in data confidentiality, algorithmic fairness, bias, and ethical use are paramount. Researchers must navigate evolving legal and moral standards.
+
+<strong>Funding and Resource Allocation:</strong> Obtaining sufficient computational resources is cost-intensive, especially for projects without immediate industrial applications. GPU clusters, cloud computing, and large datasets all require significant investment.
+
+<strong>Balancing Theory and Practice:</strong> A persistent gap exists between theoretical research and practical applications due to differing methods, objectives, and evaluation criteria.
+
+<strong>Publication and Peer Review Pressures:</strong> The "publish or perish" culture can lead to rushed, shallow publications. Peer review may be slow, biased, or inconsistent.
+
+<strong>Scalability:</strong> Research that works on a small scale (e.g., a prototype trained on a small dataset) may fail dramatically when scaled up, making scalability a critical and often underestimated challenge.
+
+<strong>Environmental Impact:</strong> Training large AI models consumes enormous amounts of energy. Sustainable and energy-efficient computing is an emerging ethical and practical concern.`},
+{heading:"Current Research Frontiers in CS",
+body:`The most active and impactful research areas in computer science today include:
+
+<strong>Quantum Computing:</strong> Building scalable quantum frameworks, designing quantum algorithms that outperform classical ones, and solving quantum error correction — one of the hardest engineering challenges in physics and CS.
+
+<strong>Artificial Intelligence and Machine Learning:</strong> Tackling challenges in generalizability (models that work beyond their training distribution), explainability (understanding why models make specific decisions), fairness (eliminating bias), and efficiency (smaller models that achieve comparable performance).
+
+<strong>Cybersecurity and Privacy:</strong> Developing confidentiality-protection mechanisms, post-quantum cryptography, privacy-preserving computation (homomorphic encryption, secure multi-party computation), and defenses against evolving cyberattacks.
+
+<strong>Human-Computer Interaction:</strong> Improving user interface design, accessibility for people with disabilities, augmented/virtual reality interaction models, and brain-computer interfaces.
+
+<strong>Big Data Analytics:</strong> Creating real-time analytics pipelines, scalable machine learning systems, and efficient data mining solutions that handle petabytes of data.
+
+<strong>Sustainable Computing:</strong> Green AI, energy-efficient algorithms, sustainable data center design, and reducing the carbon footprint of computation.
+
+<strong>Robotics and Autonomous Systems:</strong> Developing safe, efficient robots capable of interacting with humans in unstructured environments — from surgical robots to autonomous vehicles.`}
+],
+quotes:[
+{text:"Research is a voyage of discovery of new knowledge. It comprises creating ideas and generating new knowledge that leads to new and improved insights.",author:"Course Materials"},
+{text:"The chief characteristic that distinguishes the scientific method from other methods of acquiring knowledge is that scientists seek to let reality speak for itself.",author:"Research Methodology Principles"},
+{text:"Preparing for the future of computer science requires mastering fundamentals, exploring new domains, staying updated with trends, practicing skills, seeking mentorship, and maintaining curiosity and adaptability.",author:"Module 1 Synthesis"},
+{text:"A good research idea may arise from certain conditions or situations in the world. The present situation has created opportunities for research in multiple dimensions.",author:"Adhikari (2020)"}
+],
+refs:[
+"D'Agostino, S. (2022). Computer Science's Challenges, as Seen by Its Pioneers.",
+"Almstrum, V. L., Hazzan, O., Guzdial, M., & Petre, M. (2005). Challenges to computer science education research. ACM SIGCSE Bulletin, 37(1), 191-192.",
+"Kautz, K., & Kofoed, U. (2004). Studying computer science in a multidisciplinary degree programme. Journal of Information Technology Education: Research, 3(1), 227-244.",
+"Goodresearchtopic. (2023). Embracing Interdisciplinary Research: Navigating the Intersection of Knowledge.",
+"Adhikari, G. R. (2020). Strategies for selecting a research topic. Mining Engineers' Journal, 22(1), 27-31."
+],
+quiz:[
+{q:"The word 'research' originates from which language?",opts:["Latin","Old French (recerchier)","Greek","German"],ans:1,fb:"Correct! It comes from the Old French 'recerchier' meaning 'to search again.'"},
+{q:"Which characteristic of research ensures others can repeat a study under similar conditions?",opts:["Generative","Reductive","Replicable","Action-oriented"],ans:2,fb:"Replicability is a cornerstone of scientific credibility — others should be able to reproduce your results."},
+{q:"What is the most fundamental motivation for conducting research?",opts:["Career advancement","Genuine curiosity and interest","Publication pressure","Funding availability"],ans:1,fb:"While other factors play a role, genuine curiosity is the most fundamental and sustainable motivator."},
+{q:"Which of these is NOT listed as a current CS research frontier?",opts:["Quantum Computing","Blockchain Scalability","Phrenology","Sustainable Computing"],ans:2,fb:"Phrenology is a discredited pseudoscience from the 19th century, not a CS research area!"},
+{q:"The 'publish or perish' culture primarily creates pressure to:",opts:["Conduct deeper studies","Publish quickly, sometimes at the expense of depth","Collaborate more","Share data openly"],ans:1,fb:"This culture can lead to rushed, shallow publications as researchers prioritize quantity over quality."}
+]
+},
+{
+id:2, title:"Guiding Principles in Research Problem Selection",
+desc:"Mastering the art of selecting research topics, formulating objectives, and developing research questions that are focused, feasible, and significant.",
+notes:[
+{heading:"Finding a Broad Research Topic",
+body:`Selecting a research topic is the first and arguably most critical step in the research journey. Without a well-chosen topic, even the most rigorous methodology cannot produce meaningful results.
+
+The process begins with identifying a <strong>broad research topic</strong> — a general area of inquiry within your discipline. This is typically done by:
+
+<strong>1. Following Your Academic Interests:</strong> Consider the different subject areas in your course of study and the functional areas or types of work you might wish to pursue. Your broad topic should reflect genuine academic interest, as this sustains motivation through the inevitable challenges of research.
+
+<strong>2. Consulting Key Literature:</strong> Identify seminal textbooks and review articles in areas that interest you. The references at the end of textbook chapters can indicate foundational articles associated with appropriate research topics.
+
+<strong>3. Engaging with Recent Research:</strong> Consult recent academic journals to gain an overview of current research directions. Also review trade literature and talk to practitioners to identify real-world problems that need investigation.
+
+<strong>4. Considering Societal Relevance:</strong> The field of "scientific choice" examines how societal resources are allocated toward different research agendas. Research projects that address societal needs (sustainability, healthcare, equity) tend to receive greater emphasis from policymakers and funding bodies.
+
+A key insight is that your broad topic will naturally shift as you become acquainted with the available literature. This is not a sign of failure — it is a normal part of the research process.`},
+{heading:"Refining to a Research Idea",
+body:`A broad topic is too unwieldy for a focused study. The next step is to identify a specific <strong>research idea</strong> — a more focused angle or perspective within the broad topic area.
+
+This involves examining the concepts considered in seminal sources and asking: <em>What research is currently being pursued on this concept?</em> The specifics referenced at the end of textbook chapters represent what is called the <strong>research front</strong> — the current leading edge of thinking in a particular area.
+
+<strong>Why Narrowing Matters:</strong> Consider the topic "Corporate Social Responsibility" (CSR). It is vast. A researcher must choose one angle — ethical perspectives on CSR, consumer views of CSR, corporate strategy related to CSR, or financial returns from CSR. Each angle constitutes a different research project requiring a different body of literature.
+
+<strong>The Level of Analysis:</strong> When refining, consider what level you are studying — the individual, the group, or the organization. Studies of individual consumer behavior require fundamentally different literature and methods than studies of inter-organizational relationships.
+
+<strong>Practical Constraint:</strong> For student dissertations with limited time and resources, breadth without depth is a common pitfall. It is far better to study one aspect deeply than many aspects superficially.`},
+{heading:"The FRIENDS Framework for Topic Selection",
+body:`Adhikari (2020) proposed the <strong>FRIENDS</strong> acronym as a comprehensive framework for evaluating potential research topics:
+
+<strong>F — Feasibility:</strong> Can the study be undertaken with available resources in terms of manpower, time, financial support, equipment, and facilities? A SWOT analysis of your own capabilities can help assess this.
+
+<strong>R — Relevance:</strong> Is the topic scientifically, practically, socially, or personally relevant? Will it contribute to knowledge, solve practical problems, or benefit society?
+
+<strong>I — Interest and Curiosity:</strong> Are you genuinely interested and curious about this topic? Without sustained personal interest, the motivation to overcome research obstacles will falter.
+
+<strong>E — Ethical Considerations:</strong> Does the research involve humans or animals? Are there potential risks of harm? Have applicable ethical codes been considered? Necessary approvals must be obtained before proceeding.
+
+<strong>N — Narrow and Focused:</strong> Is the scope appropriately narrow? Too broad means shallow treatment; too narrow means insufficient literature. The goal is a focused, specific topic suitable for in-depth investigation.
+
+<strong>D — Disciplinary Alignment:</strong> Is the topic within your core discipline or a closely related one? Interdisciplinary work is encouraged but must remain within institutional specifications.
+
+<strong>S — Supervision Availability:</strong> Is there a qualified supervisor with expertise in this area? The supervisor-scholar relationship significantly affects research quality. The ideal scenario is high involvement from both parties (the "mentoring" quadrant).`},
+{heading:"Characteristics of a Good Research Title",
+body:`The title is the first thing readers (and evaluators) encounter. A well-crafted title can determine whether your work is read or overlooked:
+
+<strong>1. Predicts Content Accurately:</strong> A good title informs the reader precisely about the article's contents without misleading or creating wrong expectations. Every word in the title should point to something findable in the paper.
+
+<strong>2. Is Interesting and Engaging:</strong> Use words that create a positive impression and stimulate interest. However, avoid being so clever that the title becomes unclear. Example: "SuperC: Parsing all of C by taming the preprocessor" is both catchy and informative.
+
+<strong>3. Reflects Appropriate Tone:</strong> A serious academic study requires a conventional title. Amusing titles in serious fields (like medical research) are often taken less seriously and cited less frequently (Bavdekar, 2016).
+
+<strong>4. Contains Important Keywords:</strong> Place keywords at the beginning of the title so your research is easier to find in databases. Consider how your title would appear in search results on Google Scholar.
+
+<strong>Practical Strategy:</strong> Generate a minimum of 10 possible titles. Print them out, compare them, and try recombining words from different versions. Type each as a search term into Google Scholar to see what existing work appears — this tells you whether you're positioning your work correctly.`},
+{heading:"Formulating Research Objectives",
+body:`Research objectives are clear, concise statements that outline what a research project aims to achieve. They are the backbone of your study — every methodological decision should trace back to these objectives.
+
+<strong>Why Objectives Matter:</strong>
+• They provide focus and direction, keeping the study on track
+• They prevent collection of unnecessary data
+• They organize the study into clearly defined parts or phases
+• They facilitate methodology development
+• They orient data collection, analysis, interpretation, and utilization
+
+<strong>General vs. Specific Objectives:</strong> Every study should have one <strong>general objective</strong> that captures the overall aim, followed by several <strong>specific objectives</strong> that break the general aim into achievable components. The specific objectives should be:
+
+<strong>SMART Criteria:</strong>
+• <strong>S</strong>pecific — clearly defined, not vague
+• <strong>M</strong>easurable — outcomes can be assessed
+• <strong>A</strong>chievable — realistic given resources
+• <strong>R</strong>elevant — aligned with the research problem
+• <strong>T</strong>ime-bound — completable within the timeframe
+
+<strong>Language Tips:</strong> Use action verbs like "to assess," "to analyze," "to examine," "to evaluate," "to determine," "to compare." Avoid vague verbs like "to study," "to understand," "to explore" which don't specify what you will actually do.`},
+{heading:"Developing Research Questions",
+body:`Research questions translate your objectives into interrogative form. They specify exactly what the study will answer.
+
+<strong>The Overarching Question:</strong> Every dissertation must have one core, overarching research question. This is intellectually challenging to write as a single question because as researchers become closer to their topic, the tendency is to include too many dimensions.
+
+<strong>Sub-Questions:</strong> The sub-questions are linked to the research idea and operationalize the overarching question. They should all point toward answering the main question — if a sub-question doesn't serve this purpose, it should be removed.
+
+<strong>The Purpose Statement:</strong> Before writing questions, draft a purpose statement that indicates: the purpose of the study; the central concept being studied; the level of analysis (individual, organization, society); and possibly the method of inquiry.
+
+<strong>Common Mistakes:</strong>
+• Writing questions that are too broad or too narrow
+• Including questions that address different identifiable groups (e.g., employees AND consumers), leading to diluted focus
+• Failing to align questions with the identified body of literature
+• Writing questions before sufficiently reviewing the literature`},
+{heading:"Narrowing Down: From Broad to Specific",
+body:`The process of narrowing a topic is critical and often overlooked. Here's a practical example:
+
+<strong>Too Broad:</strong> "Unemployment problem in India" — impossible to cover all sectors within a typical research timeframe and budget.
+
+<strong>Progressively Narrower:</strong>
+1. "Unemployment in the mining sector in India"
+2. "Unemployment in the iron ore mining sector in India"
+3. "Unemployment for mining graduates in the iron ore mining sector in India"
+
+The final version is focused, specific, and suitable for in-depth investigation. By narrowing the scope, we have not downplayed its importance — we have made it manageable and relevant to a specific audience.
+
+<strong>The funnel approach:</strong> Start with the broad context, identify the specific domain, narrow to the particular group or phenomenon, and finally specify the exact aspect you will investigate. Each narrowing step should be justified by the literature and your research rationale.`}
+],
+quotes:[
+{text:"It is very rare for students to have a clear focus from the outset of their research, and yet many find the lack of a clear focus is a major impediment to getting started.",author:"Easterby Smith et al. (1991)"},
+{text:"Judging the book by its cover is a pointless task, but falling into this pitfall is easy. We often judge research papers by their titles.",author:"Module 2 Materials"},
+{text:"The choice of a research topic is governed primarily by the interest and passion of the researcher.",author:"Adhikari (2020)"},
+{text:"Research that aims to add something new to the body of knowledge, and does not merely replicate what has gone before, is prized.",author:"Horan (2009)"}
+],
+refs:[
+"Bannah, S. (2023). A Quick Guide to Selecting an Excellent Research Topic and Project Title. AuthorAID.",
+"Hashimi, S. A., Rashidi, J. K., & Shirzad, P. A. (2024). The rationale and approaches for choosing a research topic. Sprin Journal of Arts, Humanities and Social Sciences, 3(5), 23-26.",
+"Horan, C. (2009). Research topic selection & development: Suggested guidelines for the student researcher.",
+"Paiva, D. M. B., Turine, M. A. S., & de Mattos Fortes, R. P. (2008). A Comparative Review of Processes for Research Development on Applied Computing. IEEE.",
+"Bhattacherjee, A. (2012). Social science research: Principles, methods, and practices. University of South Florida.",
+"Adhikari, G. R. (2020). Strategies for selecting a research topic. Mining Engineers' Journal, 22(1), 27-31."
+],
+quiz:[
+{q:"What does the 'F' in the FRIENDS framework stand for?",opts:["Focus","Feasibility","Flexibility","Findings"],ans:1,fb:"F stands for Feasibility — assessing whether the study can be done with available resources."},
+{q:"Which type of title is cited less frequently in serious academic fields?",opts:["Descriptive titles","Narrative titles","Amusing/humorous titles","Question-format titles"],ans:2,fb:"Research shows amusing titles are taken less seriously and cited less often in fields like medicine."},
+{q:"How many potential titles should you generate as a minimum?",opts:["3","5","10","20"],ans:2,fb:"Generate at least 10 possible titles, print them, compare, and recombine words from different versions."},
+{q:"What does SMART stand for in research objectives?",opts:["Simple, Measurable, Accurate, Relevant, Timely","Specific, Measurable, Achievable, Relevant, Time-bound","Strategic, Meaningful, Actionable, Realistic, Tested","Systematic, Methodical, Analytical, Rigorous, Thorough"],ans:1,fb:"SMART objectives are Specific, Measurable, Achievable, Relevant, and Time-bound."},
+{q:"The 'research front' refers to:",opts:["The most cited papers in a field","The current leading edge of thinking in a particular area","The first research ever done in a field","Research conducted at front-line institutions"],ans:1,fb:"The research front represents where current research thinking is in relation to a concept — the cutting edge."}
+]
+},
+{
+id:3, title:"Literature Review",
+desc:"Mastering the art of conducting systematic, critical literature reviews that identify gaps, synthesize evidence, and establish the foundation for your research.",
+notes:[
+{heading:"Purpose and Importance of Literature Review",
+body:`The literature review is often the first substantial task in any research project, and its quality directly impacts the entire study. It serves multiple critical purposes:
+
+<strong>1. Establishing Context:</strong> It situates your research within the existing body of knowledge, showing readers where your work fits in the broader academic conversation. Without this context, your research appears disconnected and its significance is unclear.
+
+<strong>2. Identifying Gaps:</strong> Perhaps the most important function — a well-conducted review reveals what is NOT known, what has been inadequately studied, or what contradictions exist in the literature. These gaps become the justification for your research.
+
+<strong>3. Preventing Duplication:</strong> It ensures you are not inadvertently replicating work that has already been done, saving time and resources.
+
+<strong>4. Building Theoretical Foundation:</strong> It exposes you to the theories, concepts, and frameworks that previous researchers have used, helping you select appropriate theoretical grounding for your own study.
+
+<strong>5. Refining Research Questions:</strong> As you read deeply, your initial questions evolve and sharpen. The literature review is often an iterative process that continues to shape your research design.
+
+<strong>6. Demonstrating Expertise:</strong> A thorough review signals to evaluators, reviewers, and readers that you understand the field and are qualified to contribute to it.
+
+<strong>Key Insight:</strong> A literature review is not simply a summary of what others have written. It is a <em>critical synthesis</em> — an organized argument about the state of knowledge in a field, with your voice guiding the narrative.`},
+{heading:"Types of Literature Reviews",
+body:`Different research contexts call for different types of reviews:
+
+<strong>1. Systematic Review:</strong> The most rigorous type, following a pre-defined protocol to identify, evaluate, and synthesize all relevant studies on a specific question. Uses explicit inclusion/exclusion criteria and often includes meta-analysis. Common in health sciences but increasingly used in CS (e.g., for evaluating software engineering techniques).
+
+<strong>2. Scoping Review:</strong> Maps the key concepts, evidence, and research gaps in a field, particularly useful when a topic has not yet been extensively reviewed or is complex. Less restrictive than systematic reviews regarding the types of evidence included.
+
+<strong>3. Integrative Review:</strong> Combines diverse methodologies (both empirical and theoretical) to provide a comprehensive understanding of a phenomenon. Particularly valuable in fields where diverse study designs are common.
+
+<strong>4. Critical Review:</strong> Goes beyond describing the literature to evaluate and critique it — assessing the strengths, weaknesses, and methodological quality of existing studies. Aims to develop new theoretical frameworks or perspectives.
+
+<strong>5. Narrative/Traditional Review:</strong> A comprehensive overview of a topic that does not follow a rigid protocol. More flexible but potentially less reproducible. Common in humanities and social sciences.
+
+<strong>Choosing the Right Type:</strong> Your choice depends on your research question, the maturity of the field, the available literature, and the standards of your target publication or institution.`},
+{heading:"Conducting the Literature Search",
+body:`A systematic search process is essential for a credible review:
+
+<strong>1. Define Search Terms:</strong> Start with your research question and extract key concepts. For each concept, develop synonyms and related terms. For example, for "e-government procurement effectiveness," terms might include: e-procurement, digital procurement, electronic government purchasing, public procurement systems, transparency, efficiency.
+
+<strong>2. Select Databases:</strong> In CS, key databases include IEEE Xplore, ACM Digital Library, Scopus, Web of Science, Google Scholar, and DBLP. Don't rely on a single database — each has different coverage.
+
+<strong>3. Apply Inclusion/Exclusion Criteria:</strong> Define clear criteria for which studies to include. These typically cover: time period, language, publication type, relevance to research question, and quality thresholds.
+
+<strong>4. Document the Process:</strong> Record every search — the databases used, search strings, date of search, number of results, and how you filtered them. This is essential for reproducibility and for writing your methodology section.
+
+<strong>5. Snowballing:</strong> After identifying key papers, examine their reference lists (backward snowballing) and papers that cite them (forward snowballing) to find additional relevant studies that your database search may have missed.
+
+<strong>6. Use Reference Management Tools:</strong> Tools like Mendeley, Zotero, or EndNote are indispensable for organizing, annotating, and citing your growing collection of papers.`},
+{heading:"Literature Summary Tables",
+body:`Creating literature summary tables is a powerful technique for organizing and synthesizing your review. According to Younas and Ali (2021), effective literature summary tables should include:
+
+<strong>Tip 1: Include Framework and Method Details.</strong> Don't just list authors and findings — include the theoretical framework, philosophical stance, and specific methods used. This allows readers (and you) to assess the congruence between methods and findings.
+
+<strong>Tip 2: Document Strengths and Limitations.</strong> For each study, note its methodological strengths and weaknesses. Simply assigning a quality score is insufficient — explain <em>why</em> a study is strong or weak. Consider both methodological issues (e.g., sample size, analysis technique) and conceptual issues (e.g., theoretical grounding).
+
+<strong>Tip 3: Capture Conceptual Contributions.</strong> For each article, describe how its findings contribute to the development of themes, patterns, or understanding — not just what it found, but what it <em>means</em> for the broader picture.
+
+<strong>Tip 4: Develop Your Own Themes.</strong> Don't simply adopt the themes reported in individual articles. Read across studies, compare and contrast, and develop your own thematic framework that represents a higher-level synthesis.
+
+<strong>Tip 5: Personalize Your Template.</strong> While generic templates exist, adapt them to your specific review. The information that matters depends on your research question and analytical approach.`},
+{heading:"Writing the Literature Review",
+body:`The writing phase transforms your organized notes into a coherent, persuasive argument:
+
+<strong>Structure:</strong> Organize by themes, concepts, or chronological development — not by article. Listing studies one after another ("Author A found X. Author B found Y. Author C found Z.") is the most common weakness in student reviews. Instead, synthesize: "Several studies have examined the relationship between system usability and adoption rates, with consistent findings that..."
+
+<strong>Critical Voice:</strong> Don't just describe — evaluate. Use language that shows your analytical engagement: "While Smith et al. provided valuable insights into algorithm efficiency, their study was limited by the small dataset used (n=50), which may not generalize to production environments."
+
+<strong>Identifying Gaps Explicitly:</strong> Toward the end of your review, explicitly state the gaps you have identified. These gaps should directly lead to your research questions. A clear logical chain should be: what is known → what is not known → what you will study.
+
+<strong>Funnel Structure:</strong> Start broad (the general area), narrow to the specific topic, then narrow further to the precise gap your research addresses. This creates a natural narrative flow.
+
+<strong>Common Pitfalls:</strong>
+• Including too many tangential studies
+• Failing to critique — treating all studies as equally valid
+• Not connecting the review to your own research questions
+• Plagiarizing through inadequate paraphrasing`},
+{heading:"The Art of Synthesis",
+body:`Synthesis is the highest level of literature review skill. It involves combining insights from multiple sources to create new understanding:
+
+<strong>Aggregation:</strong> Grouping findings that point in the same direction. "Five of the six studies reviewed found a significant positive relationship between code review practices and software quality."
+
+<strong>Comparison:</strong> Highlighting where studies disagree. "While Johnson (2019) reported that machine learning models improved prediction accuracy by 40%, Chen (2020) found only a 12% improvement, possibly due to differences in dataset size and feature engineering approaches."
+
+<strong>Integration:</strong> Combining findings from different theoretical perspectives to create a richer understanding. "Viewed through both TAM and UTAUT lenses, the adoption barriers identified across studies can be categorized into perceived usefulness factors and facilitating condition factors."
+
+<strong>Abstraction:</strong> Moving from specific findings to higher-level principles. "Across diverse contexts — healthcare, education, government — the literature consistently identifies trust as a necessary but insufficient condition for technology adoption."
+
+<strong>Remember:</strong> The goal is not to prove that you have read everything. The goal is to construct a compelling argument for why your research is needed and how it will advance the field.`}
+],
+quotes:[
+{text:"The literature review is not simply a summary of what others have written. It is a critical synthesis — an organized argument about the state of knowledge in a field.",author:"Paul & Criado (2020)"},
+{text:"It is very rare for students to have a clear focus from the outset... the lack of a clear focus is a major impediment to getting started.",author:"Easterby Smith et al. (1991)"},
+{text:"No formula exists for transforming data into findings. There is guidance but no recipe.",author:"Patton (2002)"},
+{text:"A good title predicts the content... without misleading or establishing wrong expectations.",author:"Bavdekar (2016)"}
+],
+refs:[
+"Paré, G., & Kitsiou, S. (2017). Methods for literature reviews. In Handbook of eHealth evaluation. University of Victoria.",
+"Mauer, B., & Venecek, J. (2022). Writing the Literature Review. Strategies for Conducting Literary Research, 2e.",
+"Paul, J., & Criado, A. R. (2020). The art of writing literature review. International Business Review, 29(4), 101717.",
+"Walter, L., & Stouck, J. (2020). Writing the literature review: Graduate student experiences. Canadian Journal for the Scholarship of Teaching and Learning, 11(1).",
+"Younas, A., & Ali, P. (2021). Five tips for developing useful literature summary tables. Evidence Based Nursing, 24(2), 32-34."
+],
+quiz:[
+{q:"What is the MOST important function of a literature review?",opts:["Showing you've read many papers","Identifying gaps in existing knowledge","Demonstrating writing ability","Following institutional requirements"],ans:1,fb:"While all are relevant, identifying gaps is the most critical function — it justifies your research."},
+{q:"Which type of review follows a pre-defined protocol with explicit inclusion/exclusion criteria?",opts:["Narrative review","Critical review","Systematic review","Integrative review"],ans:2,fb:"Systematic reviews follow rigid protocols for identifying, evaluating, and synthesizing studies."},
+{q:"What is 'snowballing' in literature search?",opts:["Searching in snow-covered libraries","Examining reference lists and citations of key papers","Reading papers in random order","Using AI to generate references"],ans:1,fb:"Snowballing means checking references of key papers (backward) and papers citing them (forward)."},
+{q:"The biggest weakness in student literature reviews is:",opts:["Too many references","Organizing by article rather than by theme","Using too many quotes","Writing too much"],ans:1,fb:"Listing studies one after another without thematic synthesis is the most common and serious weakness."},
+{q:"Which tool helps manage references during a literature review?",opts:["SPSS","Mendeley/Zotero","MS Excel","Python"],ans:1,fb:"Reference managers like Mendeley, Zotero, and EndNote are designed specifically for organizing and citing literature."}
+]
+},
+{
+id:4, title:"Research Paradigms",
+desc:"Understanding the philosophical foundations — ontology, epistemology, and axiology — that underpin different research approaches and shape how knowledge is created.",
+notes:[
+{heading:"What is a Research Paradigm?",
+body:`A research paradigm is a shared worldview that represents the beliefs and values within a specific discipline. It serves as a guiding framework, showing researchers how to approach problems and find solutions. The term has its roots in ancient Greece, where "paradigma" meant "pattern."
+
+Your philosophical stance — your paradigm — determines four critical aspects of your research:
+<strong>1. What is reality?</strong> (Ontology)
+<strong>2. How is knowledge acquired?</strong> (Epistemology)
+<strong>3. What values guide the research?</strong> (Axiology)
+<strong>4. How should theory relate to practice?</strong> (Methodology)
+
+Understanding paradigms is not an abstract philosophical exercise — it has direct, practical implications for every methodological decision you make, from how you design your study to how you interpret your findings. A researcher who doesn't understand their own paradigmatic position is like a navigator without a compass.`},
+{heading:"Ontology: The Nature of Reality",
+body:`Ontology is the study of truth, reality, and existence. It asks the most fundamental question: <em>What is the nature of reality?</em>
+
+<strong>Realist Ontology (Objectivism):</strong> Holds that reality exists independently of human perception. There is a single, objective reality "out there" that can be discovered and measured. A software system either has a bug or it doesn't — this is not a matter of opinion. This view underpins quantitative research approaches.
+
+<strong>Relativist Ontology (Subjectivism/Constructivism):</strong> Holds that reality is not objective but is constructed through human interaction, experience, and interpretation. Different people may experience the same system very differently based on their background, expectations, and context. This view underpins qualitative research approaches.
+
+<strong>Why This Matters:</strong> If you believe reality is objective (realist), you'll design studies that measure and quantify. If you believe reality is constructed (relativist), you'll design studies that explore experiences and meanings. Your ontology is the foundation upon which everything else is built.
+
+<strong>In Practice:</strong> Consider studying "user satisfaction with a mobile app." A realist would develop a survey with validated scales to measure satisfaction as a quantifiable construct. A relativist would conduct interviews to understand how different users construct their experience of satisfaction and what it means to them.`},
+{heading:"Epistemology: The Nature of Knowledge",
+body:`Epistemology focuses on how knowledge is created, validated, and authenticated. Once you've defined what reality is (ontology), epistemology asks: <em>How can we know about that reality?</em>
+
+<strong>Positivist Epistemology:</strong> Knowledge is gained through empirical observation and measurement. The researcher is an objective, detached observer who does not influence what is being studied. Knowledge is value-free and can be accumulated incrementally. This aligns with realist ontology.
+
+<strong>Interpretivist Epistemology:</strong> Knowledge is gained through understanding the meanings that people attach to their experiences. The researcher is not separate from the research — they interact with participants and their own interpretations shape the findings. Knowledge is context-dependent. This aligns with relativist ontology.
+
+<strong>Pragmatic Epistemology:</strong> Knowledge is gained through whatever methods work best for answering the research question. Pragmatists reject the forced choice between positivism and interpretivism, focusing instead on the practical consequences of research. This underpins mixed methods approaches.
+
+<strong>Critical Epistemology:</strong> Knowledge is gained through exposing power structures and challenging dominant narratives. The researcher is not neutral but actively seeks to empower marginalized groups and promote social change.`},
+{heading:"The Four Major Paradigms",
+body:`<strong>1. Positivism:</strong>
+• Ontology: Reality is objective, singular, and measurable
+• Epistemology: Knowledge through empirical observation and scientific method
+• Approach: Quantitative — experiments, surveys, statistical analysis
+• Goal: Discover universal laws, causal relationships, generalizable findings
+• Key Assumption: The researcher can remain objective and detached
+• Best for: Testing hypotheses, measuring variables, establishing causality
+
+<strong>2. Interpretivism:</strong>
+• Ontology: Reality is subjective, multiple, and socially constructed
+• Epistemology: Knowledge through understanding meanings and experiences
+• Approach: Qualitative — interviews, ethnography, case studies
+• Goal: Deep understanding of phenomena from participants' perspectives
+• Key Assumption: The researcher influences and is influenced by the research
+• Best for: Exploring experiences, understanding contexts, generating theories
+
+<strong>3. Realism:</strong>
+• Ontology: An external reality exists but our understanding is imperfect
+• Epistemology: Knowledge through identifying underlying mechanisms
+• Approach: Often mixed methods — quantitative to observe patterns, qualitative to understand mechanisms
+• Goal: Explain what works, for whom, and under what conditions
+• Key Assumption: Observable outcomes are produced by hidden mechanisms
+• Best for: Complex real-world problems requiring both measurement and understanding
+
+<strong>4. Critical Theory:</strong>
+• Ontology: Reality is shaped by power structures and social forces
+• Epistemology: Knowledge through critique and exposing inequality
+• Approach: Qualitative — often participatory action research
+• Goal: Challenge the status quo, empower marginalized groups, drive social change
+• Key Assumption: Research is never neutral — it either reinforces or challenges power
+• Best for: Studies of inequality, discrimination, power dynamics in technology`},
+{heading:"Axiology: Values in Research",
+body:`Axiology, the study of human values, is often overlooked but critically important. It challenges you to consider the ethical and moral implications of your research:
+
+<strong>Value-Free Research?</strong> Positivism traditionally claims that research can and should be value-free — the researcher's personal values should not influence the study. However, critics argue this is impossible: the choice of research topic, the questions asked, the methods selected, and the interpretation of findings are all influenced by values.
+
+<strong>Value-Laden Research:</strong> Interpretivist and critical paradigms explicitly acknowledge that values are inherent in research. Rather than pretending to be value-free, these approaches make values transparent and reflexive — the researcher explicitly examines how their own values, background, and position affect the research.
+
+<strong>Practical Implications:</strong>
+• What values underpin your choice of research topic?
+• Are your methods respectful of participants' dignity?
+• Could your findings harm certain groups?
+• Who benefits from your research and who might be disadvantaged?
+• Are you reinforcing existing power structures or challenging them?
+
+<strong>In CS Research:</strong> Consider an AI fairness study. A value-free approach might simply measure bias metrics. A value-laden approach would ask: Whose definition of fairness are we using? Who decided what counts as biased? What are the power dynamics in how AI systems are deployed?`},
+{heading:"Choosing Your Paradigm",
+body:`Selecting a paradigm should not be arbitrary — it should follow logically from your research question:
+
+<strong>Ask Yourself:</strong>
+• Am I trying to measure something or understand something? (Measure → Positivism; Understand → Interpretivism)
+• Do I believe there is one reality or multiple realities in my phenomenon? (One → Positivism/Realism; Multiple → Interpretivism)
+• Do I want to test existing theory or generate new theory? (Test → Positivism; Generate → Interpretivism)
+• Is my goal to describe, explain, or change? (Describe/Explain → Positivism/Realism; Change → Critical)
+• Do I need numbers, words, or both? (Numbers → Positivism; Words → Interpretivism; Both → Realism/Pragmatism)
+
+<strong>Common Mistakes:</strong>
+• Choosing a paradigm without understanding its implications
+• Claiming positivism but conducting qualitative research (or vice versa)
+• Failing to articulate your paradigm in your research proposal
+• Switching paradigms mid-study without justification
+
+<strong>In Your Writing:</strong> Explicitly state your ontological and epistemological positions in your methodology chapter. Explain why your chosen paradigm is appropriate for your research question. This demonstrates philosophical sophistication and methodological coherence.`}
+],
+quotes:[
+{text:"A research paradigm explains what you believe reality is and how you think knowledge can be understood.",author:"Module 4 Materials"},
+{text:"Ontology sets the very foundation of your research journey. It asks: What is the nature of reality?",author:"Research Philosophy Principles"},
+{text:"If you don't understand your own paradigmatic position, you are like a navigator without a compass.",author:"Module 4 Synthesis"},
+{text:"Research is never neutral — it either reinforces or challenges existing power structures.",author:"Critical Theory Tradition"}
+],
+refs:[
+"McGilchrist, I. (2019). The Master and His Emissary: The Divided Brain and the Making of the Western World (2nd ed.). Yale University Press.",
+"Rehman, A. A., & Alharthi, K. (2016). An introduction to research paradigms. International Journal of Educational Investigations, 3(8), 51-59.",
+"Rosenberg, A. (2012). Philosophy of Science: A Contemporary Introduction (3rd ed.). Routledge.",
+"Rahi, S. (2017). Research design and methods: A systematic review of research paradigms, sampling issues and instruments development. International Journal of Economics & Management Sciences, 6(2), 1-5."
+],
+quiz:[
+{q:"Ontology deals with the question:",opts:["How do we gain knowledge?","What is the nature of reality?","What values guide research?","What methods should we use?"],ans:1,fb:"Ontology is the study of truth, reality, and existence — the nature of reality."},
+{q:"Which paradigm holds that reality is objective and measurable?",opts:["Interpretivism","Critical Theory","Positivism","Constructivism"],ans:2,fb:"Positivism views reality as objective, singular, and measurable through empirical methods."},
+{q:"A researcher studying how users construct meaning from their app experience is using which paradigm?",opts:["Positivism","Realism","Interpretivism","Post-positivism"],ans:2,fb:"Interpretivism focuses on understanding how people construct subjective meanings from their experiences."},
+{q:"Axiology in research refers to:",opts:["The study of accuracy in measurement","The study of human values and ethics","The study of data analysis methods","The study of sampling techniques"],ans:1,fb:"Axiology is the study of human values, ideas, and principles — the ethical compass of research."},
+{q:"Which paradigm is most appropriate for studying power structures in AI deployment?",opts:["Positivism","Interpretivism","Critical Theory","Pragmatism"],ans:2,fb:"Critical theory examines power structures, inequalities, and aims to drive social change."}
+]
+},
+{
+id:5, title:"Theoretical Modelling and Conceptual Framework",
+desc:"Learning to build conceptual frameworks that map variables, relationships, and mechanisms — the logical architecture of your research.",
+notes:[
+{heading:"Conceptual vs. Theoretical Framework",
+body:`These terms are often confused but refer to distinct (though related) constructs:
+
+<strong>Conceptual Framework:</strong> A description of how a researcher understands the factors/variables involved in a study and their relationships. It is the researcher's own model, developed from the literature, showing how concepts connect. It is often visual (a diagram) and explains what you <em>expect</em> to find.
+
+<strong>Theoretical Framework:</strong> The established theory (or theories) that provide the foundation for your study. This is a formal, named theory that has been developed and tested by previous researchers — e.g., Technology Acceptance Model (TAM), Diffusion of Innovations, Activity Theory.
+
+<strong>The Key Difference:</strong> A theoretical framework is <em>borrowed</em> from existing literature; a conceptual framework is <em>constructed</em> by you to fit your specific study. Your conceptual framework may draw on one or more theoretical frameworks, but it is adapted and contextualized for your research context.
+
+<strong>Imenda's Insight (2014):</strong> While some argue the distinction is merely semantic, the practical difference matters. The theoretical framework grounds your study in established knowledge; the conceptual framework operationalizes that grounding into a testable model for your specific context.
+
+<strong>Example:</strong> If you're studying e-procurement adoption, your theoretical framework might be TAM. Your conceptual framework would show how perceived usefulness, ease of use, transparency, trust, and data availability interact in the specific context of Kenyan government procurement.`},
+{heading:"Understanding Research Variables",
+body:`Variables are the building blocks of any conceptual framework. A variable is anything that can be measured and that varies:
+
+<strong>Independent Variables (IV):</strong> The "cause" — what you manipulate, introduce, or examine as the influencing factor. Its value is independent of other variables in your study. Example: System usability, training provided, interface design.
+
+<strong>Dependent Variables (DV):</strong> The "effect" — what you measure as the outcome. Its value depends on changes in the independent variable. Example: User adoption rate, task completion time, error rate.
+
+<strong>Moderating Variables:</strong> Variables that alter the <em>strength or direction</em> of the relationship between IV and DV. They affect "when" or "for whom" the relationship holds. Importantly, a moderator is NOT affected by the IV. Example: User experience level might moderate the relationship between interface complexity and adoption — the relationship might be strong for novices but weak for experts.
+
+<strong>Mediating Variables:</strong> Variables that explain <em>how or why</em> the IV influences the DV. They sit "in between" — affected by the IV and affecting the DV. Example: System usability (IV) → User satisfaction (mediator) → Adoption intention (DV). Satisfaction explains the mechanism through which usability affects adoption.
+
+<strong>Control Variables:</strong> Factors that could influence the DV but are not of interest to your study. You hold them constant to prevent distorted results. Example: Testing all participants at the same time of day to control for circadian rhythm effects.
+
+<strong>Confounding Variables:</strong> Uncontrolled variables that might explain the observed relationship, creating a false impression of causality. These are threats to validity that you must identify and address.`},
+{heading:"Building a Conceptual Framework: Step by Step",
+body:`<strong>Step 1: Start with Your Research Question.</strong> Your question determines what variables are relevant. If your question asks "Does X affect Y?" then X is your IV and Y is your DV.
+
+<strong>Step 2: Review the Literature Systematically.</strong> Go to the body of literature and identify the key concepts used by other studies. What variables have previous researchers examined? What relationships have they found? What gaps exist?
+
+<strong>Step 3: Identify and Define Variables.</strong> Pull out the variables, concepts, theories, and existing frameworks from the literature. Define each variable clearly — not just the name, but what it means in your specific context.
+
+<strong>Step 4: Map Relationships.</strong> Based on the literature and your own reasoning, determine how the variables relate to each other. Which are causes? Which are effects? Which moderate or mediate? What are the expected directions of relationships?
+
+<strong>Step 5: Consider Context and Control Variables.</strong> What contextual factors influence the situation? What variables need to be controlled? Include these in your framework.
+
+<strong>Step 6: Create a Visual Representation.</strong> Draw a diagram showing the variables and their relationships using boxes (variables) and arrows (relationships). Use different styles for different variable types (e.g., solid arrows for direct effects, dashed for moderation).
+
+<strong>Step 7: Write the Narrative.</strong> Accompany your diagram with a written explanation of each variable, each relationship, and the overall logic of the framework. The narrative should make the diagram fully understandable on its own.`},
+{heading:"Example: E-Government Procurement Framework",
+body:`Consider the concept note example from Module 10:
+
+<strong>Theoretical Foundation:</strong> Technology Acceptance Model (TAM), adapted to include transparency, trust, and data availability.
+
+<strong>Independent Variables:</strong>
+• Usability of the e-GP system (perceived ease of use)
+• Transparency of procurement processes (information visibility)
+• Data Availability (accessibility and reliability of procurement data)
+
+<strong>Dependent Variable:</strong>
+• Effectiveness of the e-GP system (overall success in achieving governance objectives)
+
+<strong>Moderating Variable:</strong>
+• Trust in digital systems (affects the strength of the relationship between IVs and DV)
+
+<strong>The Logic:</strong> Higher usability leads to greater effectiveness, but this relationship is stronger when trust in digital systems is high. Similarly, increased transparency and data availability improve effectiveness, but trust moderates these relationships. A user who trusts digital systems will respond more positively to improvements in usability and transparency than a user who distrusts them.
+
+<strong>Visual Representation:</strong> Three IV boxes on the left, one DV box on the right, with arrows flowing left to right. The moderator (Trust) is shown as an arrow pointing to the middle of the IV-DV arrows, indicating it changes the strength of those relationships.
+
+<strong>Why This Matters:</strong> This framework tells you exactly what to measure (the variables), what relationships to test (the arrows), and what to control for (context). It is the blueprint for your entire data collection and analysis plan.`},
+{heading:"Common Mistakes and How to Avoid Them",
+body:`<strong>Mistake 1: Confusing concepts with variables.</strong> A concept like "digital transformation" is too broad to be a variable. You need to operationalize it into measurable variables: "level of digital process automation," "percentage of services available online," etc.
+
+<strong>Mistake 2: Too many variables.</strong> Including every possible variable makes your framework unmanageable and your analysis unfocused. Prioritize the most important relationships based on the literature.
+
+<strong>Mistake 3: Missing mediators.</strong> If you propose that X affects Y, ask yourself: through what mechanism? Without understanding the "how," your framework is superficial.
+
+<strong>Mistake 4: Directionless frameworks.</strong> Arrows should have clear theoretical justification for their direction. Don't draw bidirectional arrows unless you have a strong theoretical reason.
+
+<strong>Mistake 5: Framework disconnected from literature.</strong> Your framework should be firmly grounded in previous research, not invented from thin air. Every variable and relationship should be justified by citing relevant studies.
+
+<strong>Mistake 6: No diagram.</strong> While the narrative is essential, a visual diagram makes your framework immediately understandable. Don't skip this step.`}
+],
+quotes:[
+{text:"A conceptual framework is not just a diagram. It's the logical map of your study, showing how key variables relate to each other and why those relationships matter.",author:"Module 5 Materials"},
+{text:"Theory is like the bucket, rather than like the water in the bucket. You have to have a bucket before you can collect the water.",author:"Christenson (1976)"},
+{text:"No researcher can avoid approaching a case study without some prior theoretical framework.",author:"Humphrey & Scapens (1996)"},
+{text:"A useful theory helps to organize the data. It draws attention to particular events or phenomena and sheds light on relationships that might otherwise go unnoticed.",author:"Maxwell (2009)"}
+],
+refs:[
+"Tamene, E. H. (2016). Theorizing conceptual framework. Asian Journal of Educational Research, 4(2), 50-56.",
+"Kaur, S. P. (2013). Variables in research. Indian Journal of Research and Reports in Medical Sciences, 3(4), 36-38.",
+"Kaur, L., & Mittal, R. (2021). Variables in Social Science Research. Indian Res. J. Ext. Edu, 21(2&3), 64-69.",
+"Zackoff, M. W., et al. (2019). Enhancing Educational Scholarship Through Conceptual Frameworks. Academic Pediatrics, 19(2), 135-141.",
+"Imenda, S. (2014). Is There a Conceptual Difference between Theoretical and Conceptual Frameworks? Journal of Social Sciences, 38(2), 185."
+],
+quiz:[
+{q:"A variable that explains HOW the independent variable affects the dependent variable is called:",opts:["Control variable","Moderating variable","Mediating variable","Confounding variable"],ans:2,fb:"A mediator explains the mechanism — it's affected by the IV and affects the DV."},
+{q:"The key difference between conceptual and theoretical frameworks is:",opts:["They are the same thing","Theoretical is borrowed; conceptual is constructed by the researcher","Conceptual is older; theoretical is newer","Theoretical uses diagrams; conceptual does not"],ans:1,fb:"Theoretical frameworks are established theories from literature; conceptual frameworks are your own model adapted for your study."},
+{q:"A moderating variable:",opts:["Is affected by the independent variable","Sits between IV and DV","Changes the strength of the IV-DV relationship","Is always a control variable"],ans:2,fb:"A moderator changes WHEN or FOR WHOM the IV-DV relationship holds. It is NOT affected by the IV."},
+{q:"Which of these is NOT a measurable variable?",opts:["Response time in milliseconds","User satisfaction (on a Likert scale)","Digital transformation","Number of errors per task"],ans:2,fb:"'Digital transformation' is too broad — it's a concept, not a directly measurable variable. It needs operationalization."},
+{q:"Your conceptual framework should be:",opts:["Invented from your own ideas","Disconnected from any theory","Grounded in previous research with citations","As complex as possible"],ans:2,fb:"Every variable and relationship should be justified by citing relevant studies — it must be literature-grounded."}
+]
+},
+{
+id:6, title:"Quantitative Research",
+desc:"Mastering data management, statistical analysis, and interpretation — from descriptive statistics to inferential testing and effect sizes.",
+notes:[
+{heading:"Fundamentals of Quantitative Research",
+body:`Quantitative research assumes that the constructs under study can be measured. It processes numerical data to identify trends, relationships, and patterns, answering questions like <em>who, how much, what, where, when, how many,</em> and <em>how.</em>
+
+<strong>Core Philosophy:</strong> Quantitative research operates within a positivist paradigm — it assumes an objective reality that can be measured and that knowledge accumulates through empirical observation. The researcher strives for objectivity and distance from the phenomena being studied.
+
+<strong>The Process:</strong> Quantitative research follows a structured, linear process:
+1. Define research questions and hypotheses
+2. Identify and operationalize variables
+3. Design the study (experimental, survey, etc.)
+4. Select a sample
+5. Collect numerical data using standardized instruments
+6. Manage and clean data
+7. Analyze data using statistics
+8. Interpret results in context
+9. Report findings
+
+<strong>Key Principle:</strong> Statistics never prove anything. They only quantify how certain or uncertain we are about effects, relationships, or differences. The whole approach is probabilistic — there is always some degree of uncertainty in any statistical conclusion.`},
+{heading:"Data Management: The Critical First Step",
+body:`Before any analysis can occur, raw data must be transformed into a usable dataset. This process is called <strong>data management</strong>, and its quality directly determines the validity of your results.
+
+<strong>Variable Types (Classification):</strong>
+• <strong>Dichotomous:</strong> Only two values (e.g., male/female, yes/no, pass/fail)
+• <strong>Categorical (Nominal):</strong> Three or more values with no inherent order (e.g., country of origin, department)
+• <strong>Categorical (Ordinal):</strong> Values with a meaningful order but no fixed unit (e.g., pain scale 0-10, education level)
+• <strong>Metric (Continuous):</strong> Values with order AND a fixed unit of measurement (e.g., weight in kg, time in seconds, temperature)
+
+<strong>Data Cleaning — Essential Steps:</strong>
+• Check for inconsistent data entry (e.g., "F," "f," "female," "1" all meaning the same thing)
+• Identify out-of-range values (e.g., a pain score of 13 on a 0-10 scale — clearly a typo)
+• Handle missing values — they create imbalances that can affect validity
+• Create a code book documenting all variable definitions and coding schemes
+• Use frequency tables to audit all entered data
+
+<strong>Missing Values:</strong> These occur when participants skip questions, miss measurement points, or drop out. A large number of missing values can seriously compromise your analysis. Common approaches include: deletion (remove cases with missing data), substitution (replace with mean/median), and imputation (statistical estimation). However, prevention during data collection is always better than treatment after the fact.`},
+{heading:"Descriptive Statistics",
+body:`Descriptive statistics summarize your data to show what is "typical" for your sample. They are always the first analysis performed:
+
+<strong>For Categorical Variables — Frequencies:</strong>
+Total numbers and percentages. For example: "60% of participants were female (n=120), 40% male (n=80)." These are typically presented in tables or bar charts.
+
+<strong>For Metric Variables — Measures of Central Tendency:</strong>
+• <strong>Mean:</strong> The arithmetic average (sum divided by count). Most commonly used but sensitive to extreme values.
+• <strong>Median:</strong> The middle value when data is sorted. Robust against extreme values — use when data is skewed.
+• <strong>Mode:</strong> The most frequent value. Least informative for metric data but useful for categorical data.
+
+<strong>For Metric Variables — Measures of Dispersion:</strong>
+• <strong>Range:</strong> Distance between minimum and maximum values. Simple but heavily influenced by outliers.
+• <strong>Standard Deviation (SD):</strong> The average distance of each data point from the mean. Low SD = data clustered tightly around mean; high SD = data spread out. This is the most commonly reported measure of spread.
+
+<strong>Normal Distribution:</strong> In a normal (bell-shaped) distribution, mean = median = mode. The empirical rule states: 68% of values fall within 1 SD of the mean, 95% within 2 SDs, and ~99.7% within 3 SDs. Many statistical tests assume normally distributed data — always check this assumption before proceeding to inferential statistics.
+
+<strong>Confidence Intervals:</strong> A 95% CI provides a range within which we are 95% confident the true population parameter lies. For example, if mean weight is 73 kg with a 95% CI of [69.7, 76.3], we can be 95% confident that the true population mean weight falls between 69.7 and 76.3 kg.`},
+{heading:"Inferential Statistics and Hypothesis Testing",
+body:`Inferential statistics allow us to make inferences about a population based on sample data. They test whether observed effects, relationships, or differences are likely to be real or just due to chance.
+
+<strong>The Null Hypothesis (H₀):</strong> States there is NO effect, relationship, or difference. Example: "There is no difference in error rates between Interface A and Interface B."
+
+<strong>The Alternative Hypothesis (H₁):</strong> States there IS an effect. Example: "There is a difference in error rates between Interface A and Interface B."
+
+<strong>The Logic:</strong> We assume H₀ is true and look at our data. If the data would be very unlikely under H₀, we reject H₀ and accept H₁. If the data are consistent with H₀, we fail to reject it.
+
+<strong>Type I Error (α):</strong> Rejecting H₀ when it is actually true — a "false positive." Typically set at 0.05 (5% risk). This is the significance level.
+
+<strong>Type II Error (β):</strong> Failing to reject H₀ when it is actually false — a "false negative." Statistical power = 1 - β, typically set at 0.80 (80%).
+
+<strong>The P Value:</strong> The probability of observing data as extreme as yours if H₀ were true. If P < α (usually 0.05), we reject H₀. A P value of 0.03 means there is only a 3% chance of seeing these results if there truly is no effect.
+
+<strong>Common Statistical Tests:</strong>
+• Chi-square: Compares two categorical variables
+• Pearson's r: Correlation between two metric variables
+• Student's t-test: Compares means of two groups
+• ANOVA: Compares means of three or more groups
+• Regression: Shows effects of IVs on DV while controlling for other variables`},
+{heading:"Effect Sizes: Beyond P Values",
+body:`Jacob Cohen (1990) wrote: <em>"The primary product of a research inquiry is one or more measures of effect size, not p-values."</em> This is one of the most important insights in modern statistics.
+
+<strong>Why Effect Sizes Matter:</strong>
+• P values only tell you IF an effect exists, not HOW LARGE it is
+• With a large enough sample, even a trivially small effect can be "statistically significant"
+• Effect sizes tell you the PRACTICAL significance of your findings
+
+<strong>Types of Effect Size:</strong>
+• <strong>Absolute:</strong> When the variable has intrinsic meaning. E.g., "The intervention group gained 1.6 hours of extra sleep" — 1.6 hours is meaningful in real life.
+• <strong>Standardized:</strong> When comparing across studies or the variable has no intrinsic meaning. Cohen's d is the most common: d = 0.2 (small), d = 0.5 (medium), d = 0.8 (large).
+
+<strong>The Critical Distinction — Statistical vs. Clinical Importance:</strong>
+• Trial 1: n=10,000, P<0.001, effect = 0.5% reduction → Statistically significant but clinically trivial
+• Trial 2: n=10, P=0.74, effect = 30% reduction → Not significant but potentially very important
+• Trial 3: n=200, P=0.004, effect = 20% reduction → Both significant AND important
+
+<strong>In CS Research:</strong> Always report effect sizes alongside P values. If your new algorithm is "significantly faster" (P<0.05) but the effect size shows it saves only 2 milliseconds on a 10-second task, the practical relevance is questionable.`},
+{heading:"Choosing the Right Statistical Test",
+body:`Selecting the appropriate test depends on your research question and the types of variables involved:
+
+<strong>Testing Differences:</strong>
+• Two groups, metric DV, independent samples → Independent t-test (or Mann-Whitney if not normal)
+• Two groups, metric DV, same participants → Paired t-test (or Wilcoxon if not normal)
+• Three+ groups, metric DV → One-way ANOVA (or Kruskal-Wallis if not normal)
+• Categorical DV → Chi-square test
+
+<strong>Testing Relationships:</strong>
+• Two metric variables → Pearson correlation (or Spearman if not normal)
+• Predicting one metric DV from one or more metric IVs → Multiple regression
+• Predicting a categorical DV → Logistic regression
+
+<strong>Checking Assumptions:</strong>
+Before running any parametric test, check:
+1. Normality of data distribution (histogram, Shapiro-Wilk test)
+2. Homogeneity of variance (Levene's test)
+3. Independence of observations
+4. Appropriate sample size
+
+If assumptions are violated, either: (a) use a non-parametric equivalent, or (b) transform the data (e.g., log transformation for skewed data). Never simply ignore violated assumptions — your results may be invalid.`}
+],
+quotes:[
+{text:"The primary product of a research inquiry is one or more measures of effect size, not p-values.",author:"Jacob Cohen (1990)"},
+{text:"Statistics never prove anything. They only help to quantify exactly how certain or uncertain effects, relationships, or differences are.",author:"Kotronoulas et al. (2023)"},
+{text:"Statistically significant results may not always be clinically important. Statistical significance is usually a function of the sample size.",author:"Module 6 Materials"},
+{text:"Data cleaning, as an essential aspect of quality assurance and a determinant of validity, should not be an exception.",author:"Kotronoulas et al. (2023)"}
+],
+refs:[
+"Cunningham, J. B., & Aldrich, J. O. (2011). Using SPSS: An interactive hands-on approach.",
+"Babbie, E. R. (2020). The practice of social research.",
+"Almquist, Y. B., Kvart, S., & Brännström, L. (2020). A practical guide to quantitative methods with SPSS.",
+"Gunter, B. (2013). The quantitative research process. In A handbook of media and communication research. Routledge.",
+"Kotronoulas, G., et al. (2023). An overview of the fundamentals of data management, analysis, and interpretation in quantitative research. Seminars in Oncology Nursing, 39, 151398."
+],
+quiz:[
+{q:"What does a P value of 0.03 mean?",opts:["There is a 3% effect size","There is a 3% probability of seeing these results if the null hypothesis is true","The result is 97% correct","The effect size is 0.03"],ans:1,fb:"A P value is the probability of observing your data (or more extreme) if H₀ is true. P=0.03 means only 3%."},
+{q:"Cohen's d = 0.6 indicates what size of effect?",opts:["Small","Medium","Large","Very large"],ans:1,fb:"Cohen's benchmarks: 0.2 = small, 0.5 = medium, 0.8 = large. 0.6 falls in the medium range."},
+{q:"Which measure of central tendency is most robust to outliers?",opts:["Mean","Median","Mode","Range"],ans:1,fb:"The median is unaffected by extreme values because it's simply the middle value, not an average."},
+{q:"A study with n=10,000 finds P<0.001 for a 0.5% improvement. This demonstrates:",opts:["Strong practical significance","Large effect size","Statistical significance without practical importance","A well-designed study"],ans:2,fb:"With huge samples, even trivially small effects become 'significant.' Effect size matters more than P value."},
+{q:"If your data is not normally distributed, you should:",opts:["Proceed anyway — it doesn't matter","Use a non-parametric test equivalent","Transform the P value","Delete the outliers and retest"],ans:1,fb:"Non-parametric tests (Mann-Whitney, Kruskal-Wallis, etc.) don't assume normality and are the correct approach."}
+]
+},
+{
+id:7, title:"Qualitative Research",
+desc:"Understanding the art of in-depth exploration through interviews, observations, and case studies — seeking meaning, not measurement.",
+notes:[
+{heading:"What is Qualitative Research?",
+body:`Qualitative research represents a fundamentally different approach to understanding the world compared to quantitative methods. While quantitative research asks <em>"how many" and "how much,"</em> qualitative research asks <em>"what, why, and how"</em> — seeking to understand the meanings, experiences, and perspectives of people.
+
+<strong>Key Characteristics (Patton, 2002):</strong>
+• <strong>Naturalistic Inquiry:</strong> Studying real-world situations as they unfold naturally, without manipulation or control
+• <strong>Inductive Analysis:</strong> Immersing in data to discover categories and patterns, rather than testing pre-set hypotheses
+• <strong>Holistic Perspective:</strong> Understanding the whole phenomenon as a complex system, not reducing it to discrete variables
+• <strong>Thick Description:</strong> Providing detailed, rich accounts that capture the context and complexity of human experience
+• <strong>Personal Contact:</strong> The researcher has direct, prolonged engagement with people and situations
+• <strong>Dynamic Systems:</strong> Recognizing that change is constant — processes matter as much as outcomes
+• <strong>Design Flexibility:</strong> The research design evolves as understanding deepens, not locked into a rigid plan
+
+<strong>Philosophical Foundation:</strong> Qualitative research operates within an interpretivist paradigm. It holds that reality is socially constructed, subjective, and multiple. The researcher is not separate from the research but interacts with participants, and their own interpretations shape the findings. As Creswell (2009) noted, in qualitative research "the researcher interacts with that being studied."
+
+<strong>In CS Context:</strong> Qualitative methods are essential for understanding user experiences with technology, organizational impacts of IT systems, developer practices, ethical implications of AI, and many other areas where numbers alone cannot capture the full picture.`},
+{heading:"Case Study as a Research Strategy",
+body:`The case study is one of the most widely used qualitative strategies in CS research. It involves an in-depth exploration of a <strong>bounded case</strong> — a specific entity, event, or phenomenon within its real-life context.
+
+<strong>Types of Case Studies (Ryan et al., 1992):</strong>
+• <strong>Descriptive:</strong> Describes systems, techniques, and procedures currently in use
+• <strong>Illustrative:</strong> Illustrates new or innovative practices
+• <strong>Experimental:</strong> Examines difficulties in implementing new proposals and evaluates benefits
+• <strong>Exploratory:</strong> Explores the reasons behind a particular practice
+• <strong>Explanatory:</strong> Explains the reasons for observed practices
+
+<strong>Single vs. Multiple Case Design:</strong>
+• <strong>Single case:</strong> Appropriate when the case is critical (testing a theory), extreme, revelatory, or longitudinal. It can make a significant contribution to knowledge.
+• <strong>Multiple case:</strong> Used for cross-site comparison. Follows <em>replication logic</em>, not sampling logic — each case is chosen to predict similar results (literal replication) or contrasting results (theoretical replication).
+
+<strong>Important:</strong> Case study research is based on <strong>replication, not sampling logic</strong> (Yin, 2009). You don't select cases to represent a population statistically. You select them to replicate or extend theoretical patterns. This means <strong>theoretical generalization</strong> is possible but <strong>statistical generalization</strong> is not.`},
+{heading:"Data Collection Methods",
+body:`Qualitative research typically uses multiple data sources to build a rich, triangulated understanding:
+
+<strong>1. In-Depth Interviews:</strong>
+The most common data source. Semi-structured or unstructured interviews allow participants to share their perspectives in their own words. The interviewer uses an interview guide but remains flexible, following the participant's lead when interesting directions emerge.
+
+<strong>Key Principles:</strong>
+• Use open-ended questions: "Can you describe..." "What was it like when..." "How did you feel about..."
+• Avoid leading questions that suggest a desired answer
+• Listen actively and follow up on unexpected responses
+• Record and transcribe interviews verbatim
+• Establish rapport and trust before probing sensitive topics
+
+<strong>2. Observation:</strong>
+Direct observation of behaviors, interactions, and processes in natural settings. Can range from complete observer (detached) to participant-as-observer (involved but observing role is known). Field notes are the primary data record and should be detailed, dated, and include the researcher's reflections.
+
+<strong>3. Document Analysis:</strong>
+Official documents, organizational records, emails, meeting minutes, and other textual materials provide contextual data that supplements and corroborates interview and observation data. Documents can reveal what people say publicly versus what they do privately.
+
+<strong>4. Artifacts:</strong> Physical or digital objects relevant to the study — system interfaces, code repositories, workflow diagrams, etc.
+
+<strong>Triangulation:</strong> Using multiple data sources is essential for credibility. When interviews, observations, and documents all point to the same conclusions, confidence in the findings increases. Discrepancies between sources are not problems — they are valuable data that reveal complexity.`},
+{heading:"Qualitative Data Analysis",
+body:`Qualitative data analysis is the process of bringing order, structure, and meaning to the mass of collected data. It is not a linear process but involves iterative cycles of reading, coding, and interpreting.
+
+<strong>The General Process (Creswell, 2007):</strong>
+1. <strong>Organize and prepare data:</strong> Transcribe interviews, organize field notes, prepare documents
+2. <strong>Read and immerse:</strong> Read through all data to get a holistic sense
+3. <strong>Code the data:</strong> Assign labels (codes) to segments of data that represent meaningful concepts
+4. <strong>Generate themes:</strong> Group related codes into broader themes
+5. <strong>Write analytic memos:</strong> Document your thinking, reflections, and emerging insights throughout
+6. <strong>Search for alternative explanations:</strong> Actively look for data that contradicts your emerging themes
+7. <strong>Represent and visualize:</strong> Use tables, matrices, diagrams, and narratives to present findings
+8. <strong>Interpret and draw conclusions:</strong> Connect findings to the literature and theoretical framework
+
+<strong>Thematic Analysis:</strong> The most widely used approach. It involves identifying patterns (themes) across the dataset. Themes can be:
+• <strong>Deductive:</strong> Pre-defined based on theory (top-down)
+• <strong>Inductive:</strong> Emerging from the data (bottom-up)
+• <strong>Hybrid:</strong> Combining both approaches
+
+<strong>Software Tools:</strong> NVivo, ATLAS.ti, and MAXQDA can assist with organizing and coding large datasets. However, they are tools for management, not analysis — the intellectual work of interpretation remains with the researcher.`},
+{heading:"Ensuring Quality: Validity and Reliability",
+body:`Quality in qualitative research is assessed differently from quantitative research:
+
+<strong>Instead of "Validity" — Credibility:</strong>
+Are the findings an accurate representation of participants' experiences? Ensured through:
+• Prolonged engagement in the field
+• Triangulation of data sources
+• Member checking (sharing findings with participants for verification)
+• Peer debriefing (having colleagues review your analysis)
+
+<strong>Instead of "Reliability" — Dependability:</strong>
+Can the findings be traced back to the data? Ensured through:
+• Detailed audit trail documenting all research decisions
+• Step-by-step documentation of data collection and analysis procedures
+• Code book and coding examples
+
+<strong>Instead of "Generalizability" — Transferability:</strong>
+Can findings apply to other contexts? Ensured through:
+• Thick description of the research context
+• Clear delineation of the boundaries of the case
+• Honest reporting of limitations
+
+<strong>Theoretical Generalization (Not Statistical):</strong>
+In case study research, generalization is not based on sampling from a population but on extending theory to other cases. As Yin (2009) argued, case studies rely on theoretical inference — the findings are generalizable to other cases that share similar theoretical characteristics, not to all cases in a statistical sense.
+
+<strong>Humphrey and Scapens (1996):</strong> "Theories are rhetorical devices for both interpreting case studies and convincing the research community as to the validity of the case findings and interpretations."`},
+{heading:"Ethical Considerations in Qualitative Research",
+body:`Qualitative research involves deep, personal engagement with human participants, making ethical considerations particularly important:
+
+<strong>Informed Consent:</strong> Participants must understand the research purpose, what participation involves, their right to withdraw at any time, and how their data will be used and protected. Consent should be ongoing — participants can withdraw even after data collection.
+
+<strong>Confidentiality and Anonymity:</strong> Ensure that participants cannot be identified from published findings. This may require changing names, locations, and other identifying details. Be aware that in small communities or organizations, anonymity may be difficult to guarantee.
+
+<strong>Power Dynamics:</strong> The researcher often holds more power than participants (especially in workplace studies). Be mindful of how this affects what participants share and how you represent their views.
+
+<strong>Data Storage:</strong> Audio recordings, transcripts, and field notes contain sensitive personal information. Secure storage (encrypted files, password protection) and clear data retention policies are essential.
+
+<strong>Researcher Positionality:</strong> Reflexively examine how your own background, values, and assumptions influence the research. Acknowledge your positionality in your writing.
+
+<strong>Do No Harm:</strong> Consider the potential consequences of your research for participants and their communities. Research that exposes wrongdoing or critiques powerful organizations may put participants at risk.`}
+],
+quotes:[
+{text:"Qualitative research identifies which, what, when, why, and how of certain phenomena, while quantitative methods identify how many, how often and how much.",author:"Barbour (2008)"},
+{text:"No formula exists for transforming data into findings. There is guidance but no recipe.",author:"Patton (2002)"},
+{text:"Case study research is based on replication, not sampling logic. Theoretical generalization is possible but not statistical generalization.",author:"Yin (2009)"},
+{text:"Social reality is emergent, subjectively created, and objectified through human interactions.",author:"Chua (1986)"}
+],
+refs:[
+"Byrd, R. (2020). Qualitative research methods. Virtual Class, Memphis.",
+"Taylor, B. C., & Trujillo, N. (2001). Qualitative research methods. The new handbook of organizational communication.",
+"Chowdhury, A., & Shil, N. C. (2021). Thinking 'qualitative' through a case study: Homework for a researcher. American Journal of Qualitative Research, 5(2), 190-210.",
+"Creswell, J. W. (2007). Qualitative Inquiry and Research Design: Choosing Among Five Approaches (2nd ed.). Sage.",
+"Yin, R. K. (2009). Case Study Research: Design and Methods (4th ed.). Sage."
+],
+quiz:[
+{q:"Qualitative research primarily asks which types of questions?",opts:["How many and how much","What, why, and how","Is there a significant difference","What is the correlation coefficient"],ans:1,fb:"Qualitative research seeks to understand meanings, experiences, and processes — what, why, and how."},
+{q:"Case study research is based on what type of logic?",opts:["Sampling logic","Statistical logic","Replication logic","Random logic"],ans:2,fb:"Case studies use replication logic — each case is chosen to replicate or extend theoretical patterns."},
+{q:"What type of generalization is possible in case study research?",opts:["Statistical generalization","Theoretical generalization","Population generalization","No generalization at all"],ans:1,fb:"Case studies generalize to theory, not to populations. Findings extend to cases with similar theoretical characteristics."},
+{q:"Triangulation in qualitative research means:",opts:["Using three statistical tests","Using multiple data sources to corroborate findings","Interviewing three participants","Measuring three variables"],ans:1,fb:"Triangulation means using multiple data sources (interviews, observations, documents) to cross-check and strengthen findings."},
+{q:"In qualitative research, 'credibility' replaces which quantitative concept?",opts:["Reliability","Validity","Significance","Effect size"],ans:1,fb:"Credibility is the qualitative equivalent of validity — are findings an accurate representation of participants' experiences?"}
+]
+},
+{
+id:8, title:"Hybrid Research (Mixed Methods)",
+desc:"Combining quantitative and qualitative approaches for comprehensive understanding — team structures, integration strategies, and practical challenges.",
+notes:[
+{heading:"What is Mixed Methods Research?",
+body:`Mixed methods research (MMR) formally integrates quantitative and qualitative approaches within a single study to provide a more complete understanding of a research problem than either approach alone could achieve.
+
+<strong>The Core Idea:</strong> Quantitative research tells you <em>what</em> is happening and <em>how much</em>; qualitative research tells you <em>why</em> and <em>how</em>. When combined, they provide both breadth and depth of understanding.
+
+<strong>Why Mixed Methods in CS?</strong> Computer science research increasingly deals with complex, multifaceted problems that cannot be adequately addressed by numbers alone or words alone. For example:
+• Evaluating a new software tool: Quantitative metrics (performance, error rates) + Qualitative insights (user experience, workflow impact)
+• Studying AI adoption: Survey data on adoption rates + Interviews exploring barriers and enablers
+• Assessing cybersecurity practices: Metrics on vulnerability rates + Case studies of organizational culture
+
+<strong>Key Principle:</strong> Mixed methods is not simply doing a quantitative study AND a qualitative study side by side. It requires genuine <strong>integration</strong> — the quantitative and qualitative components must connect, inform, and enhance each other at some point in the research process.`},
+{heading:"Types of Mixed Methods Designs",
+body:`<strong>1. Convergent Design:</strong>
+• Collect quantitative and qualitative data <strong>simultaneously</strong>
+• Analyze each separately
+• <strong>Merge</strong> results during interpretation
+• Best for: When both types of data are equally important and you want a comprehensive picture
+
+<strong>2. Explanatory Sequential Design:</strong>
+• Collect <strong>quantitative data first</strong>
+• Analyze quantitative results
+• Use qualitative data to <strong>explain</strong> the quantitative findings
+• Best for: When you want to understand why quantitative results turned out as they did (e.g., survey shows low adoption → interviews explore reasons)
+
+<strong>3. Exploratory Sequential Design:</strong>
+• Collect <strong>qualitative data first</strong>
+• Analyze qualitative results
+• Develop quantitative instruments based on qualitative findings
+• Collect quantitative data to <strong>test or generalize</strong> qualitative findings
+• Best for: When you need to explore a topic before you can measure it (e.g., interviews identify factors → survey measures their prevalence)
+
+<strong>4. Embedded Design:</strong>
+• One method is <strong>primary</strong>, the other is <strong>secondary/embedded</strong>
+• The secondary method supports or supplements the primary method
+• Best for: When one method dominates but needs supplementary data
+
+<strong>5. Multiphase Design:</strong>
+• Multiple phases of data collection over time
+• Each phase may use a different design
+• Best for: Large-scale, long-term research programs`},
+{heading:"Points of Integration",
+body:`Integration is what distinguishes true mixed methods from simply conducting two separate studies. Integration can occur at several points:
+
+<strong>1. Design Level:</strong> The research questions themselves require both quantitative and qualitative data to answer.
+
+<strong>2. Data Collection Level:</strong> Using the same participants for both components, or using qualitative findings to determine who to include in the quantitative phase.
+
+<strong>3. Data Analysis Level:</strong>
+• <strong>Merging:</strong> Bringing datasets together for comparison (e.g., comparing survey results with interview themes side by side)
+• <strong>Connecting:</strong> Using results from one phase to inform the next (e.g., interview themes determine survey items)
+• <strong>Embedding:</strong> One type of data is embedded within the analysis of the other
+
+<strong>4. Interpretation Level:</strong> Using both sets of results together to draw conclusions that neither set could support alone. This is where the "1+1=3" effect of mixed methods becomes apparent.
+
+<strong>Joint Display:</strong> A visual representation (table, matrix, diagram) that shows both quantitative and qualitative results together and their connections. Joint displays are increasingly required by journals to demonstrate genuine integration.`},
+{heading:"Building the Research Team",
+body:`Mixed methods research requires diverse expertise that rarely resides in a single person. The composition and dynamics of the research team are critical:
+
+<strong>Multidisciplinary vs. Interdisciplinary vs. Transdisciplinary (Rosenfield, 1992):</strong>
+• <strong>Multidisciplinary:</strong> Researchers work in parallel from disciplinary-specific bases to address common problems. Limited interaction between approaches.
+• <strong>Interdisciplinary:</strong> Researchers work jointly but from disciplinary-specific bases. More interaction but still maintaining disciplinary boundaries.
+• <strong>Transdisciplinary:</strong> Researchers work jointly using a shared conceptual framework that draws together disciplinary theories and approaches. The highest level of integration.
+
+<strong>Team Composition Principles:</strong>
+• Include both quantitative and qualitative expertise
+• Include domain expertise relevant to the research problem
+• Ensure breadth (coverage of all needed methods) AND depth (ability to rigorously execute each method)
+• Multiple team members should be involved in integration, not just one person
+• A history of successful collaboration among team members strengthens proposals
+
+<strong>The Role of the Principal Investigator:</strong>
+The PI should have a broad perspective across methods, the ability to bridge different perspectives, skills in facilitating dialogue, sensitivity to workload imbalances, and commitment to educating team members about unfamiliar methods. The most effective MMR leader may not be the deepest expert in any one method but rather the best integrator.`},
+{heading:"Practical Challenges and Solutions",
+body:`<strong>Challenge 1: Epistemological Tension.</strong> Quantitative and qualitative approaches often rest on different philosophical assumptions (positivism vs. interpretivism). Team members may disagree about what constitutes valid knowledge.
+
+<strong>Solution:</strong> Acknowledge the tension explicitly. Adopt a pragmatic philosophical stance that values "what works" over philosophical purity. Create team norms that respect both traditions.
+
+<strong>Challenge 2: Time and Resource Demands.</strong> Doing two types of research well takes roughly twice the time and resources of a single-method study.
+
+<strong>Solution:</strong> Be realistic about scope. Consider embedded designs where one method is secondary. Seek funding that explicitly supports mixed methods.
+
+<strong>Challenge 3: Integration Difficulties.</strong> Genuine integration is harder than it appears. Many published "mixed methods" studies simply report quantitative and qualitative results in separate sections without connecting them.
+
+<strong>Solution:</strong> Plan integration from the design stage, not as an afterthought. Use joint displays. Have team members with cross-method expertise lead integration.
+
+<strong>Challenge 4: Publication Challenges.</strong> Some journals favor one method over another. Page limits may not allow adequate reporting of both components.
+
+<strong>Solution:</strong> Target journals that explicitly welcome mixed methods. Consider publishing multiple papers from one study. Use supplementary materials.
+
+<strong>Challenge 5: Training Gaps.</strong> Most researchers are trained in one tradition. Team members may lack competence in the other method.
+
+<strong>Solution:</strong> Invest in team training. Use collaborative learning where quantitative experts learn from qualitative experts and vice versa. Engage consultants when needed.`}
+],
+quotes:[
+{text:"A mixed methods perspective cannot simply be added at the end of the research development process by including a 'mixed methods expert' on the team.",author:"Creswell et al. (2011)"},
+{text:"Mixed methods research is not simply a team of individual researchers with distinct methodological traditions and skills — it requires transcending those differences.",author:"Module 8 Materials"},
+{text:"The most effective mixed methods team leader may not be the greatest expert in any one approach, but rather the person who is able to bridge differences and create synergy.",author:"Best Practices for MMR"},
+{text:"Researchers work jointly using a shared conceptual framework drawing together disciplinary-specific theories, concepts, and approaches — this is transdisciplinary research.",author:"Rosenfield (1992)"}
+],
+refs:[
+"Hevner, A., & Chatterjee, S. (2010). Design Research in Information Systems. Springer, Chapter 1.",
+"Cross, N. (2001). Designerly Ways of Knowing: Design Discipline vs. Design Science. Design Issues, 17(3), 49-55.",
+"Creswell, J., et al. (2011). Teamwork, Infrastructure, Resources and Training for Mixed Methods Research.",
+"Rosenfield, P. L. (1992). The potential of transdisciplinary research for sustaining linkages between health and social sciences. Social Science & Medicine, 35(11), 1343-1357.",
+"Crabtree, B. F., et al. (1994). Exploring collaborative research in primary care. Sage."
+],
+quiz:[
+{q:"In an explanatory sequential design, which data is collected first?",opts:["Qualitative","Quantitative","Both simultaneously","Neither — it's a literature review"],ans:1,fb:"Explanatory sequential = quantitative FIRST, then qualitative to explain the quantitative results."},
+{q:"What distinguishes true mixed methods from doing two separate studies?",opts:["Using two different software tools","Genuine integration of methods","Having a larger team","Publishing in different journals"],ans:1,fb:"Integration — connecting quantitative and qualitative components at design, collection, analysis, or interpretation level — is the key."},
+{q:"A 'joint display' in mixed methods research is:",opts:["A conference presentation format","A visual showing both quantitative and qualitative results together","A joint authorship agreement","A shared database"],ans:1,fb:"Joint displays visually represent both types of data and their connections, demonstrating genuine integration."},
+{q:"In the transdisciplinary team model, researchers:",opts:["Work in parallel independently","Work jointly from disciplinary-specific bases","Use a shared conceptual framework across disciplines","Only use quantitative methods"],ans:2,fb:"Transdisciplinary research uses a shared conceptual framework that integrates theories and approaches from multiple disciplines."},
+{q:"The biggest practical challenge in mixed methods research is:",opts:["Having too many participants","Genuine integration of the two approaches","Choosing a journal","Writing the literature review"],ans:1,fb:"While all are challenges, genuine integration — connecting both methods meaningfully — is the most difficult and most commonly faked."}
+]
+},
+{
+id:9, title:"Ethical Issues in Research",
+desc:"Navigating the moral landscape of research — from informed consent and data protection to AI ethics, intellectual property, and professional responsibility.",
+notes:[
+{heading:"The Foundation: Morality, Ethics, and the Law",
+body:`Understanding research ethics requires distinguishing three related but distinct concepts:
+
+<strong>Morality:</strong> A set of rules for right conduct — a system that modifies and regulates behavior. Moral codes are shared behavioral patterns that have evolved for the survival of groups and societies. They include principles like the Golden Rule ("Do unto others as you would have them do unto you") that appear across virtually all cultures and religions.
+
+<strong>Ethics:</strong> The systematic, philosophical study of morality. While morality provides the rules, ethics provides the reasoning behind them. Ethics asks not just "what is right?" but "why is it right?" and "what should we do when moral rules conflict?"
+
+<strong>Law:</strong> Formal rules enacted by governing bodies, with enforcement mechanisms. Laws may codify moral principles but the relationship is not simple — some laws may be immoral (historical examples abound), and some moral obligations may not be legally required.
+
+<strong>In Research:</strong> Legal compliance is necessary but not sufficient for ethical research. A study may be legally permissible but ethically questionable (e.g., collecting publicly available social media data without users' awareness). Ethical research requires going beyond minimum legal requirements to consider the broader moral implications of your work.`},
+{heading:"The Trinity of Good Research",
+body:`Kolstoe and Pugh (2024) propose that good research requires three interconnected elements:
+
+<strong>1. Research Integrity:</strong> Honesty and transparency in the conduct of research. This includes:
+• Not fabricating or falsifying data
+• Not plagiarizing others' work
+• Accurately reporting methods and results, including negative findings
+• Properly acknowledging contributions of others
+• Sharing data and materials when possible (open science principles)
+• Declaring conflicts of interest
+
+<strong>2. Research Ethics:</strong> Protecting the rights, dignity, and welfare of participants and affected communities. This includes:
+• Obtaining informed consent
+• Ensuring confidentiality and data protection
+• Minimizing risk of harm
+• Ensuring fair recruitment (no exploitation)
+• Special protections for vulnerable populations
+• Ethical use of AI and automated systems in research
+
+<strong>3. Research Governance:</strong> The systems and processes that ensure integrity and ethics are maintained. This includes:
+• Institutional Review Boards (IRBs) / Ethics Committees
+• Data protection policies and compliance
+• Research oversight and monitoring
+• Publication ethics (peer review, editorial standards)
+• Institutional policies on conflicts of interest
+
+<strong>The Key Insight:</strong> These three elements are necessary but not sufficient individually. Research with strong governance but weak integrity still fails. Research with strong ethics but poor governance may lack accountability. All three must work together.`},
+{heading:"Core Ethical Principles in Research",
+body:`<strong>1. Respect for Persons (Autonomy):</strong>
+Participants must be treated as autonomous agents capable of making their own decisions. This requires:
+• <strong>Informed Consent:</strong> Participants must receive sufficient information about the study (purpose, procedures, risks, benefits, alternatives, right to withdraw) in understandable language
+• Consent must be voluntary — free from coercion or undue influence
+• For vulnerable populations (children, prisoners, cognitively impaired), additional protections are needed
+
+<strong>2. Beneficence:</strong>
+Maximize benefits and minimize harms. This requires:
+• A careful assessment of risks and benefits before the study begins
+• The research must have a favorable risk-benefit ratio
+• Risks should be minimized through careful design
+• Benefits may be direct (to participants) or indirect (to society/knowledge)
+
+<strong>3. Justice:</strong>
+Fair distribution of the burdens and benefits of research. This requires:
+• Fair selection of participants — don't target vulnerable populations simply because they are easily accessible
+• Don't exclude populations who might benefit from the research
+• Ensure that groups bearing the risks of research also share in the benefits
+
+<strong>4. Respect for Privacy and Confidentiality:</strong>
+Participants have a right to control their personal information. This requires:
+• Collecting only data necessary for the research
+• Storing data securely
+• Reporting findings in ways that prevent identification
+• Complying with data protection regulations (GDPR, etc.)`},
+{heading:"Ethics in Computing Research: Special Considerations",
+body:`Computer science research raises unique ethical challenges that traditional frameworks may not fully address:
+
+<strong>AI and Algorithmic Ethics:</strong>
+• <strong>Bias and Fairness:</strong> Algorithms trained on biased data perpetuate and amplify existing inequalities. Researchers must audit training data, test for disparate impact, and consider fairness across demographic groups.
+• <strong>Explainability:</strong> Black-box AI systems that cannot explain their decisions raise ethical concerns, especially in high-stakes domains (healthcare, criminal justice, hiring).
+• <strong>Accountability:</strong> When an AI system causes harm, who is responsible — the developer, the deployer, the user, or the algorithm itself?
+• <strong>Consent for Data Use:</strong> Training AI on publicly available data (social media posts, web content) raises questions about whether individuals consented to this use.
+
+<strong>Data Ethics:</strong>
+• <strong>Big Data Paradox:</strong> Large datasets may seem anonymous but can often be re-identified through combination with other data sources.
+• <strong>Data Ownership:</strong> Who owns the data generated by users of a platform — the user, the platform, or the researcher?
+• <strong>Right to Be Forgotten:</strong> Individuals may have the right to have their data deleted, conflicting with research needs for data retention.
+
+<strong>Software and System Ethics:</strong>
+• <strong>Software Risks and Liabilities:</strong> When software fails (e.g., in medical devices, autonomous vehicles), who bears responsibility — the developer, the tester, the deployer?
+• <strong>Open Source Ethics:</strong> What are the ethical obligations when releasing software that could be misused?
+• <strong>Responsible Disclosure:</strong> How should researchers handle discovered security vulnerabilities?
+
+<strong>Social Impact:</strong>
+• <strong>Digital Divide:</strong> Research may widen the gap between those with and without technology access
+• <strong>Automation and Employment:</strong> Research that improves automation may displace workers
+• <strong>Surveillance:</strong> Research that improves surveillance capabilities may enable authoritarian control`},
+{heading:"A Framework for Ethical Decision Making",
+body:`When facing an ethical dilemma, the Markkula Center for Applied Ethics (2021) recommends a systematic approach:
+
+<strong>Step 1: Recognize the Ethical Issue.</strong> Is this an ethical question or simply a practical/technical one? Ethical issues involve harm, rights, fairness, or conflicting values.
+
+<strong>Step 2: Get the Facts.</strong> What are the relevant facts? Who are the stakeholders? What are their interests? What are the applicable laws and regulations?
+
+<strong>Step 3: Evaluate Alternative Actions.</strong> Consider the options through multiple ethical lenses:
+• <strong>Utilitarian:</strong> Which option produces the greatest good for the greatest number?
+• <strong>Rights-based:</strong> Which option best respects the rights of all stakeholders?
+• <strong>Justice:</strong> Which option treats people fairly and equitably?
+• <strong>Common Good:</strong> Which option serves the community as a whole?
+• <strong>Virtue:</strong> Which option reflects the kind of person/researcher I want to be?
+
+<strong>Step 4: Make a Decision and Test It.</strong> After evaluating through multiple lenses, make a decision. Then test it: "Could I justify this decision to my colleagues? To the public? To the affected participants?"
+
+<strong>Step 5: Act and Reflect.</strong> Implement the decision and later reflect on the outcome. Would I make the same decision again? What did I learn?
+
+<strong>In Practice:</strong> Keep an ethics journal throughout your research. Document ethical decisions and their justifications. This creates an audit trail that demonstrates ethical awareness and protects you if questions arise later.`},
+{heading:"Professional Codes of Ethics",
+body:`Professional organizations have established codes that provide specific guidance for CS practitioners and researchers:
+
+<strong>ACM Code of Ethics and Professional Conduct (2018):</strong> Organized around four principles:
+1. <strong>General Ethical Principles:</strong> Contribute to society and human well-being; avoid harm; be honest and trustworthy; be fair and take action not to discriminate; respect privacy; honor confidentiality.
+2. <strong>Professional Responsibilities:</strong> Strive for excellence; maintain professional competence; know and respect existing laws; accept and provide appropriate review; give comprehensive and thorough evaluations; foster integrity.
+3. <strong>Professional Leadership Principles:</strong> Ensure computing professionals' efforts are used for good; manage personnel and resources to enhance quality of working life; articulate and encourage policies that promote best practices.
+4. <strong>Compliance with the Code:</strong> Uphold and promote the principles; treat violations as inconsistent with membership.
+
+<strong>IEEE Code of Ethics:</strong> Commits members to the highest ethical and professional conduct, including: protecting public safety, health, and welfare; avoiding conflicts of interest; being honest in all claims; rejecting bribery; improving understanding of technology's impact.
+
+<strong>Beyond Compliance:</strong> Codes of ethics are necessary but not sufficient. They provide minimum standards, not aspirational goals. Ethical researchers should aim beyond compliance toward genuine moral reflection and responsibility.`}
+],
+quotes:[
+{text:"Research that aims to add something new to the body of knowledge, and does not merely replicate what has gone before, is prized.",author:"Kizza (2016)"},
+{text:"The trinity of good research: distinguishing between research integrity, ethics, and governance — all three are necessary but not sufficient individually.",author:"Kolstoe & Pugh (2024)"},
+{text:"With the rise of AI and big data, challenges emerge in data confidentiality, fairness, and ethical use. Researchers must comply with evolving legal and moral standards.",author:"Module 1 Materials"},
+{text:"Codes of ethics are necessary but not sufficient. They provide minimum standards, not aspirational goals.",author:"Module 9 Synthesis"}
+],
+refs:[
+"Kizza, J. M. (2016). Ethics in Computing. Springer.",
+"Markkula Center for Applied Ethics (2021). A framework for Ethical Decision Making. Santa Clara University.",
+"Kolstoe, S. E., & Pugh, J. (2024). The trinity of good research: Distinguishing between research integrity, ethics, and governance. Accountability in Research, 31(8), 1222-1241.",
+"Moor, J. H. (2020). What is computer ethics? In The Ethics of Information Technologies. Routledge.",
+"Blundell, B. G. (2020). Ethics in Computing, Science, and Engineering: A Student's Guide. Springer.",
+"Pietilä, A. M., et al. (2020). Qualitative research: Ethical considerations. In The Application of Content Analysis in Nursing Science Research. Springer."
+],
+quiz:[
+{q:"According to Kolstoe and Pugh (2024), the 'trinity' of good research consists of:",opts:["Methods, Data, Analysis","Integrity, Ethics, Governance","Planning, Execution, Reporting","Quantitative, Qualitative, Mixed"],ans:1,fb:"Research integrity, ethics, and governance are all necessary but none is sufficient alone."},
+{q:"The principle of 'beneficence' in research ethics means:",opts:["Respecting participants' autonomy","Maximizing benefits and minimizing harm","Ensuring fair distribution of research burdens","Protecting intellectual property"],ans:1,fb:"Beneficence = maximize benefits, minimize harms. It requires a favorable risk-benefit ratio."},
+{q:"Which ethical framework asks 'Which option produces the greatest good for the greatest number?'",opts:["Rights-based","Justice","Utilitarian","Virtue ethics"],ans:2,fb:"Utilitarianism focuses on consequences — maximizing overall welfare."},
+{q:"In AI research, using publicly available social media data to train models raises ethical questions about:",opts:["Server costs","Consent for data use","Programming language choice","Algorithm efficiency"],ans:1,fb:"Just because data is publicly available doesn't mean individuals consented to it being used for AI training."},
+{q:"Professional codes of ethics provide:",opts:["Aspirational goals for exceptional researchers","Minimum standards of conduct","Legal requirements","Guarantees of ethical behavior"],ans:1,fb:"Codes provide minimum standards — ethical researchers should aim beyond compliance toward genuine moral reflection."}
+]
+},
+{
+id:10, title:"Technical Writing and Research Communication",
+desc:"Transforming research into compelling proposals, papers, and presentations — with a practical concept note writing form.",
+notes:[
+{heading:"The Art of Proposal Writing",
+body:`Proposal writing is a creative process — far more than filling in a form or ticking boxes. It is an opportunity to pitch an idea, making it compelling, credible, and inspiring to evaluators.
+
+<strong>Mindset Shift:</strong> Think of your proposal as a persuasive argument, not a bureaucratic document. Every section should build the case for why your research matters, why you are the right person/team to do it, and why it will succeed.
+
+<strong>The Skeleton Outline Approach:</strong>
+Before writing full prose, create a skeleton with bullet points under each section heading. This helps you:
+• Manage workload and assign tasks early in team projects
+• Audit existing material that can be reused or repackaged
+• Identify what needs to be developed from scratch
+• Ensure you address all requirements without repetition
+
+<strong>Common Proposal Weaknesses:</strong>
+• Too much about the organization, not enough about the project
+• Vague objectives that don't specify what will actually be done
+• No clear connection between problem, objectives, and methodology
+• Unrealistic timelines or budgets
+• Missing or weak conceptual framework
+• Generic content transplanted without adaptation to the specific call
+
+<strong>What Evaluators Look For:</strong>
+• Comprehensive understanding of the operating environment
+• Adherence to programmatic goals
+• Proper resourcing and local networks
+• Access to stakeholders and trust-based relationships
+• Measurable outcomes using SMART principles
+• Good value for money
+• Viable methodology that accounts for risks and assumptions
+• A lasting project legacy`},
+{heading:"Core Principles of Technical Writing",
+body:`<strong>1. Clarity:</strong> Use plain language. If a simpler word works, use it. Avoid jargon unless it is necessary and defined. Every sentence should be immediately understandable to your target audience.
+
+<strong>2. Conciseness:</strong> Be brief but complete. Remove redundancy without losing meaning. If you can say it in 10 words, don't use 30. However, conciseness does not mean omitting necessary detail.
+
+<strong>3. Accuracy:</strong> Use correct facts, figures, and citations. Every claim should be supported by evidence. Misrepresenting data or sources is a serious breach of integrity.
+
+<strong>4. Consistency:</strong> Maintain uniform formatting, terminology, and style throughout. If you define an acronym, use it consistently. If you use British spelling, don't switch to American.
+
+<strong>5. Audience Awareness:</strong> Adapt your writing to your readers. A technical paper for specialists can use domain-specific terminology; a policy brief for government officials must translate technical findings into actionable recommendations.
+
+<strong>6. Logical Flow:</strong> Each paragraph should follow from the previous one. Each section should build toward the next. The reader should never have to ask "why are they telling me this?"
+
+<strong>7. Visual Communication:</strong> Use tables, figures, and diagrams to present complex information. A well-designed table can replace paragraphs of text. Every visual should be self-explanatory — readable without reference to the main text.`},
+{heading:"Making Academic Writing Coherent",
+body:`Coherence is what makes a paper feel like a unified argument rather than a collection of disconnected ideas. Prof. Lennart Nacke (2023) identifies seven practical methods to achieve it:
+
+<strong>1. Parallelism:</strong> Repeat similar phrase structures to create rhythm and balance. This helps readers follow the progression of ideas and emphasizes key points. 
+<em>Example:</em> "The first aspect of X is..., the second aspect of X is..., and the third aspect of X is..." — breaking a complex concept into manageable, equally-weighted parts.
+
+<strong>2. Repetition:</strong> Strategically repeat key terms, ideas, or arguments throughout the document to establish coherence and unity. Introduce an important idea in the opening and return to it in the conclusion to underline its significance. This is especially important for core theoretical concepts — do not swap them out for synonyms.
+
+<strong>3. Synonyms:</strong> Vary word choice using synonyms to prevent monotony and maintain reader interest. However, use synonyms only for peripheral descriptive words — never replace your core technical or conceptual terms, as this confuses reviewers.
+
+<strong>4. Lexical Chains:</strong> Use sequences of related words to illustrate consistency and relevance. For example, when discussing technology adoption: "usability → user experience → user satisfaction → user engagement → user loyalty." Lexical chains signal to readers that ideas are conceptually connected.
+
+<strong>5. Topic Sentences:</strong> Begin every paragraph with a clear, succinct topic sentence that states the paragraph's main point and its connection to your overarching argument. This establishes a focused framework and ensures every paragraph earns its place. The topic sentence ties each paragraph back to your research question.
+
+<strong>6. Cohesive Nouns (Umbrella Nouns):</strong> Condense multiple related words or concepts into a single broad term. For example, instead of repeating "buttons, menus, and other related components," use "interface elements." This reduces wordiness, avoids repetition, and creates a more polished tone. Cohesive nouns also make complex topics more accessible.
+
+<strong>7. Transitions:</strong> Use transition words and full transition sentences to connect sections and signal relationships between ideas. 
+
+<strong>Key transition categories and examples:</strong>
+• <em>Introducing new content:</em> "This section discusses... / What follows is a description of... / The next section provides a more in-depth description of X."
+• <em>Introducing a new topic:</em> "With regard to X... / Regarding X... / Concerning X..."
+• <em>Revisiting a topic:</em> "As previously mentioned... / As stated earlier... / Returning briefly to the topic of X..."
+• <em>Transitioning between sections:</em> "Let us now consider... / This chapter has established that... / This section examined the causes of X and claimed that..."
+• <em>Contrasting arguments:</em> "In contrast to Smith, Jones (2014) has suggested... / Nevertheless, little progress has been achieved in... / Yet, this approach has significant limitations... / On the other hand, there is evidence that contradicts this argument..."
+
+<strong>Why Coherence Matters:</strong> Coherent writing is persuasive writing. When your paper flows logically — with each sentence hinting at the next, each paragraph connecting to the overarching question — readers can follow your argument effortlessly. Incoherent writing forces readers to fill in gaps themselves, and they may fill them incorrectly. In research communication, an argument that is hard to follow is often an argument that is not believed.`},
+{heading:"Structure of a Research Paper",
+body:`<strong>1. Title:</strong> Informative, precise, and engaging. Place keywords at the beginning. Avoid vague titles.
+
+<strong>2. Abstract (150-300 words):</strong> A mini-version of the entire paper. It should contain: the research problem, objectives, methodology (briefly), key findings, and implications. Many readers will only read the abstract — it must stand alone.
+
+<strong>3. Introduction:</strong>
+• Establish the broad context and significance
+• Narrow to the specific problem
+• Review key literature (briefly — full review may be separate)
+• State the research gap
+• Present research questions/objectives
+• Outline the paper's structure
+
+<strong>4. Literature Review:</strong> Organized thematically, not by article. Should establish what is known, identify gaps, and justify your research. Ends with a clear statement of what your study will address.
+
+<strong>5. Methodology:</strong> Describe and justify your research design, participants, data collection, and analysis procedures in sufficient detail for replication. Explain why your chosen methods are appropriate.
+
+<strong>6. Results:</strong> Present findings objectively, without interpretation. Use tables and figures effectively. Report both positive and negative findings.
+
+<strong>7. Discussion:</strong> Interpret results, connect to literature, explain unexpected findings, acknowledge limitations, and discuss implications.
+
+<strong>8. Conclusion:</strong> Summarize key findings and provide recommendations for practice and future research.
+
+<strong>9. References:</strong> Complete, consistent, and in the required citation style (APA 7th, IEEE, etc.).`},
+{heading:"Research Communication Beyond Papers",
+body:`Effective researchers communicate through multiple channels:
+
+<strong>Oral Presentations:</strong>
+• Structure: Introduction → Problem → Method → Key Finding → Implication → Conclusion
+• Use slides as visual aids, not teleprompters — minimal text, clear visuals
+• Practice timing — never go over time
+• Prepare for questions — anticipate the hardest ones
+• Tell a story, don't just report data
+
+<strong>Poster Presentations:</strong>
+• Layout: Title at top, columns for sections, clear visual hierarchy
+• Minimal text — focus on visuals (charts, diagrams)
+• Font size readable from 1 meter away (minimum 24pt)
+• Prepare a 2-minute "elevator pitch" for your poster
+
+<strong>Research Communication for Impact:</strong>
+• <strong>Blogs:</strong> Translate technical findings for broader audiences
+• <strong>Social Media:</strong> Share research highlights, engage with community
+• <strong>Policy Briefs:</strong> Distill findings into actionable recommendations for policymakers
+• <strong>Public Lectures:</strong> Engage the public with your research
+• <strong>Media Engagement:</strong> Work with science communicators to reach wider audiences
+
+<strong>Digital Tools:</strong>
+• Writing: LaTeX, Overleaf, MS Word, Google Docs
+• References: Mendeley, Zotero, EndNote
+• Plagiarism checking: Turnitin, Grammarly, iThenticate
+• Visualization: Tableau, Python (matplotlib/seaborn), R (ggplot2)
+• Collaboration: GitHub, Notion, Overleaf`},
+{heading:"Ethical Standards in Research Communication",
+body:`<strong>Plagiarism Avoidance:</strong>
+• Always credit sources — direct quotes require quotation marks and citations; paraphrases require citations
+• Self-plagiarism (reusing your own published work without citation) is also unethical
+• Use plagiarism checking tools before submission
+
+<strong>Data Integrity:</strong>
+• Report findings honestly, including negative or unexpected results
+• Do not manipulate data, images, or statistics to support a desired conclusion
+• Report all conditions, including those that didn't work
+• Make data available when possible (open data principles)
+
+<strong>Authorship Ethics:</strong>
+• Authorship should be based on substantial contribution to conception, design, data collection, analysis, or writing
+• All authors must approve the final version
+• Ghost authorship (someone contributed significantly but isn't listed) is unethical
+• Gift authorship (someone listed who didn't contribute) is unethical
+• Specify each author's contribution in the paper
+
+<strong>Publication Ethics:</strong>
+• Don't submit the same paper to multiple journals simultaneously
+• Don't slice one study into multiple minimal publications ("salami slicing")
+• Disclose all conflicts of interest
+• Disclose funding sources
+• Participate fairly in peer review when asked
+
+<strong>Accessibility:</strong>
+• Make research usable by diverse audiences, including those with disabilities
+• Consider alternative formats (plain language summaries, audio descriptions)
+• Open access publishing increases reach and impact`}
+],
+quotes:[
+{text:"Proposal writing is far more than filling in a form or ticking boxes — it is an opportunity to pitch an idea, making it compelling, credible, and inspiring.",author:"Module 10 Materials"},
+{text:"Many readers will only read the abstract — it must stand alone as a mini-version of the entire paper.",author:"Technical Writing Principles"},
+{text:"A good proposal pitches the idea, not the organisation. Minimize marketing language; emphasize project viability.",author:"Module 10 Materials"},
+{text:"Every visual should be self-explanatory — readable without reference to the main text.",author:"Technical Writing Standards"},
+{text:"Cohesion and coherence are achieved by linking ideas well within and between paragraphs, reiterating the main point, and, if necessary, giving detailed explanations.",author:"Nacke, L. (2023). How to Make Academic Writing More Coherent"},
+{text:"An argument that is hard to follow is often an argument that is not believed. Coherent writing is persuasive writing.",author:"Academic Writing Principles"},
+{text:"For core concepts in your paper, repeat your key words for clarity — do not switch out synonyms, as this will confuse your reviewers.",author:"Nacke, L. (2023)"}
+],
+refs:[
+"Nacke, L. (2023). How to Make Academic Writing More Coherent (7 Methods). lennartnacke.com.",
+"Gunter, B. (2013). The quantitative research process. In A handbook of media and communication research. Routledge.",
+"Sadan, V. (2017). Data collection methods in quantitative research. Indian Journal of Continuing Nursing Education, 18(2), 58-63.",
+"Cunningham, J. B., & Aldrich, J. O. (2011). Using SPSS: An interactive hands-on approach.",
+"Babbie, E. R. (2020). The practice of social research.",
+"Almquist, Y. B., Kvart, S., & Brännström, L. (2020). A practical guide to quantitative methods with SPSS."
+],
+quiz:[
+{q:"What should an abstract contain?",opts:["Full literature review","Research problem, objectives, methodology, key findings, implications","Only the methodology","Only the conclusions"],ans:1,fb:"An abstract is a mini-paper containing all key elements: problem, objectives, method, findings, implications."},
+{q:"The biggest common weakness in proposals is:",opts:["Too many references","Too much about the organization, not enough about the project","Overly detailed methodology","Too many figures"],ans:1,fb:"Evaluators want to know about the project — not your organization's history or capabilities."},
+{q:"'Salami slicing' in publication ethics refers to:",opts:["Using incorrect statistical methods","Dividing one study into multiple minimal publications","Plagiarizing from multiple sources","Publishing in low-quality journals"],ans:1,fb:"Salami slicing is publishing multiple small papers from one study instead of one comprehensive paper."},
+{q:"Which is NOT a core principle of technical writing?",opts:["Clarity","Conciseness","Complexity","Accuracy"],ans:2,fb:"Complexity is the opposite of what good technical writing aims for — clarity and simplicity are key."},
+{q:"Ghost authorship in research means:",opts:["Writing anonymously","Someone contributed significantly but isn't listed as an author","Publishing in predatory journals","Using AI to write papers"],ans:1,fb:"Ghost authorship is when someone made a substantial contribution but isn't credited — it's unethical."},
+{q:"Which coherence technique involves condensing multiple related concepts into one broad term (e.g., 'interface elements' instead of 'buttons, menus, and sliders')?",opts:["Parallelism","Lexical chains","Cohesive nouns","Repetition"],ans:2,fb:"Cohesive nouns (umbrella nouns) reduce wordiness by grouping related items under a single term — improving flow and clarity."},
+{q:"According to Nacke (2023), when should you use synonyms for key terms in a research paper?",opts:["Always, to add variety","Only for peripheral descriptive words — never for core technical concepts","Only in the introduction","Whenever a word appears more than three times"],ans:1,fb:"Core theoretical/technical terms must be repeated consistently for clarity. Synonyms should only replace peripheral words, never the central concepts of your study."}
+]
+}
+];
+
+// ===== CONCEPT NOTE FORM =====
+const CN_SECTIONS = [
+{id:"title",label:"1. Proposed Title of the Study",hint:"Create a concise, informative title that accurately predicts the content. Place keywords at the beginning. Example: 'Evaluating the Effectiveness of Kenya's E-Government Procurement System in Enhancing Transparency and Efficiency'",type:"textarea",placeholder:"Enter your proposed research title..."},
+{id:"context",label:"2. Context and Setting of the Research Problem",hint:"Describe the broader context, the specific setting, and why this context matters. Establish the background that leads to the problem. Include relevant statistics, policies, or developments.",type:"textarea",placeholder:"Describe the context and setting of your research problem..."},
+{id:"problem",label:"3. Statement of the Problem",hint:"Clearly articulate the specific gap, challenge, or contradiction that your research will address. What is not known? What is not working? What evidence suggests a problem exists?",type:"textarea",placeholder:"State the research problem clearly..."},
+{id:"general_obj",label:"4a. General Objective",hint:"One overarching statement of what the study aims to achieve. Use action verbs like 'to evaluate,' 'to assess,' 'to analyze.' Example: 'To evaluate the effectiveness of Kenya's e-GP system in enhancing transparency and efficiency.'",type:"textarea",placeholder:"Enter the general objective..."},
+{id:"specific_objs",label:"4b. Specific Objectives",hint:"Break the general objective into 3-5 specific, achievable components. Each should be SMART (Specific, Measurable, Achievable, Relevant, Time-bound). Use numbered format.",type:"textarea",placeholder:"i. To assess...\nii. To analyze...\niii. To examine...\niv. To recommend..."},
+{id:"questions",label:"5. Research Questions",hint:"Convert each specific objective into a question form. Each question should directly correspond to one specific objective.",type:"textarea",placeholder:"1. How do users perceive...?\n2. What impact has...?\n3. What challenges exist...?\n4. What strategies can...?"},
+{id:"justification",label:"6. Justification / Significance of the Study",hint:"Explain why this study matters. Address: Academic contribution (what gaps it fills), Policy relevance (how it informs decision-makers), Practical impact (who benefits and how), and Beneficiaries (specific stakeholders).",type:"textarea",placeholder:"Explain the significance of your study..."},
+{id:"framework",label:"7. Theoretical / Conceptual Framework",hint:"Name the theory/theories guiding your study (e.g., TAM, UTAUT, Diffusion of Innovations). Identify IVs, DVs, and any moderating/mediating variables. Describe how they interact. Note: A schematic diagram is encouraged.",type:"textarea",placeholder:"Describe your theoretical/conceptual framework..."},
+{id:"methodology",label:"8. Research Methodology",hint:"Cover: Research design (e.g., mixed-methods, experimental, case study); Population (target vs accessible); Sampling strategy (probability: random, stratified, cluster, systematic; or non-probability: purposive, snowball, convenience); Data collection instruments (survey, interview guide, observation); Data analysis plan (qualitative: thematic analysis; quantitative: statistical tests; mixed: integration approach). Sample size justification is important.",type:"textarea",placeholder:"Describe your research methodology..."},
+{id:"timeline",label:"9. Timeline",hint:"Provide a realistic schedule for your research. Use phases: e.g., Phase 1: Literature Review (Months 1-2); Phase 2: Data Collection (Months 3-4); Phase 3: Analysis (Month 5); Phase 4: Writing (Month 6). A Gantt chart is recommended.",type:"textarea",placeholder:"Outline your research timeline..."},
+{id:"budget",label:"10. Budget Estimate",hint:"Outline key cost categories: Personnel (RAs, transcribers); Data Collection (travel, surveys, software licenses); Analysis tools; Dissemination (conference fees, publication costs); Contingency (10-15%). Justify major expenditures.",type:"textarea",placeholder:"Provide a budget estimate..."},
+{id:"references",label:"11. Key References",hint:"List 5-10 key references in APA format. These should include: foundational works in your field; key methodological references; recent (last 5 years) empirical studies; the theoretical framework source(s).",type:"textarea",placeholder:"List key references in APA format..."}
+];
+
+// ===== COMPREHENSIVE EXAM =====
+const EXAM_QUESTIONS = [
+{q:"The word 'research' originates from Old French, meaning:",opts:["To study deeply","To search again","To create knowledge","To find truth"],ans:1,module:"Module 1"},
+{q:"Which characteristic of research ensures others can repeat a study under similar conditions?",opts:["Generative","Reductive","Replicable","Action-oriented"],ans:2,module:"Module 1"},
+{q:"The FRIENDS framework for topic selection stands for Feasibility, Relevance, Interest, Ethics, Narrow, Disciplinary alignment, and:",opts:["Data Sources","Supervision Availability","Statistical Methods","Sample Size"],ans:1,module:"Module 2"},
+{q:"SMART research objectives require objectives to be Specific, Measurable, Achievable, Relevant, and:",opts:["Theoretical","Time-bound","Tested","Transferable"],ans:1,module:"Module 2"},
+{q:"Which type of literature review is most rigorous and follows a pre-defined protocol?",opts:["Narrative Review","Scoping Review","Systematic Review","Integrative Review"],ans:2,module:"Module 3"},
+{q:"'Snowballing' in literature search refers to:",opts:["Using too many sources","Examining reference lists of identified papers","An outdated research method","Gathering data in winter"],ans:1,module:"Module 3"},
+{q:"Ontology in research paradigms deals with the question of:",opts:["How we gain knowledge","What the nature of reality is","What values guide research","What methods we use"],ans:1,module:"Module 4"},
+{q:"Which paradigm holds that reality is objective, singular, and measurable?",opts:["Interpretivism","Critical Theory","Positivism","Constructivism"],ans:2,module:"Module 4"},
+{q:"A mediating variable in research:",opts:["Strengthens the IV-DV relationship","Explains HOW the IV influences the DV","Is unrelated to the main study","Controls confounding factors"],ans:1,module:"Module 5"},
+{q:"The Technology Acceptance Model (TAM) is an example of a:",opts:["Conceptual Framework","Theoretical Framework","Research Methodology","Data Analysis Technique"],ans:1,module:"Module 5"},
+{q:"A P value of 0.03 means:",opts:["3% effect size","3% probability of observing these results if H₀ is true","97% confidence in results","Effect is 3 times greater"],ans:1,module:"Module 6"},
+{q:"Cohen's benchmarks classify d=0.8 as:",opts:["Small","Medium","Large","Very large"],ans:2,module:"Module 6"},
+{q:"Which is a core characteristic of qualitative research?",opts:["Hypothesis testing","Inductive analysis and naturalistic inquiry","Large sample sizes","Statistical significance testing"],ans:1,module:"Module 7"},
+{q:"In a case study with multiple units of analysis, the design is called:",opts:["Single-case design","Exploratory design","Multiple-case design","Embedded design"],ans:2,module:"Module 7"},
+{q:"In an explanatory sequential mixed methods design, which comes first?",opts:["Qualitative data","Quantitative data","Both simultaneously","Literature review"],ans:1,module:"Module 8"},
+{q:"True mixed methods research requires:",opts:["More than two researchers","Genuine integration of methods","Publication in two journals","Equal sample sizes"],ans:1,module:"Module 8"},
+{q:"The 'trinity of good research' according to Kolstoe and Pugh (2024) consists of:",opts:["Methods, Data, Analysis","Integrity, Ethics, Governance","Planning, Execution, Reporting","Quantitative, Qualitative, Mixed"],ans:1,module:"Module 9"},
+{q:"Beneficence in research ethics means:",opts:["Respecting participants' right to withdraw","Maximizing benefits and minimizing harm","Ensuring equal distribution of research burdens","Reporting findings accurately"],ans:1,module:"Module 9"},
+{q:"'Salami slicing' in publication ethics refers to:",opts:["Using incorrect statistical methods","Dividing one study into multiple minimal publications","Plagiarizing from multiple sources","Publishing in predatory journals"],ans:1,module:"Module 10"},
+{q:"An abstract should be written as:",opts:["A full literature review","A mini-paper containing all key elements","Only methodology and results","Just the conclusions"],ans:1,module:"Module 10"},
+{q:"The 'research front' in a literature review refers to:",opts:["The first page of a paper","The current leading edge of thinking in a field","A citation count metric","The introduction section"],ans:1,module:"Modules 2-3"},
+{q:"Which sampling strategy assigns each population member an equal chance of selection?",opts:["Purposive sampling","Snowball sampling","Simple random sampling","Convenience sampling"],ans:2,module:"Module 6"},
+{q:"Axiology in research deals with:",opts:["Data analysis methods","The study of human values and ethics","Sampling techniques","Measurement validity"],ans:1,module:"Module 4"},
+{q:"A moderating variable:",opts:["Explains the mechanism between IV and DV","Alters the strength or direction of the IV-DV relationship","Is an uncontrolled confound","Is always a demographic variable"],ans:1,module:"Module 5"},
+{q:"Which literature summary table tip involves going beyond what studies found to assess what they MEAN for the field?",opts:["Tip 1: Framework details","Tip 3: Conceptual contributions","Tip 2: Strengths and limitations","Tip 5: Personalized template"],ans:1,module:"Module 3"}
+];
+
+// ===== STATE =====
+let currentModule = 1;
+let currentTab = {};
+let quizAnswered = {};
+let completedModules = new Set();
+let examStarted = false;
+let examTimer = null;
+let examTimeLeft = 60 * 60;
+let examAnswers = {};
+
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded', () => {
+  buildNav();
+  renderModule(1);
+  setupSearch();
+  createParticles();
+});
+
+function createParticles() {
+  const container = document.getElementById('particles');
+  for(let i = 0; i < 15; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*100}%;animation-delay:${Math.random()*8}s;animation-duration:${6+Math.random()*8}s`;
+    container.appendChild(p);
+  }
+}
+
+function buildNav() {
+  const nav = document.getElementById('sideNav');
+  const items = [
+    ...MODULES.map(m => ({id:m.id, label:m.title, type:'module'})),
+    {id:'exam', label:'Comprehensive Exam', type:'exam'},
+    {id:'cn', label:'Concept Note Builder', type:'cn'}
+  ];
+  nav.innerHTML = items.map(item => {
+    const isSpecial = item.type !== 'module';
+    const num = item.type === 'module' ? item.id : (item.type === 'exam' ? '<i class="fas fa-graduation-cap"></i>' : '<i class="fas fa-file-alt"></i>');
+    const isCompleted = item.type === 'module' && completedModules.has(item.id);
+    return `<div class="nav-item ${isSpecial ? 'special' : ''} ${isCompleted ? 'completed' : ''}" 
+      id="nav-${item.id}" onclick="navigate('${item.id}')">
+      <div class="num">${num}</div>
+      <span>${item.type === 'module' ? 'Module ' + item.id + ': ' : ''}${item.label}</span>
+    </div>`;
+  }).join('');
+}
+
+function navigate(id) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const navEl = document.getElementById('nav-' + id);
+  if(navEl) navEl.classList.add('active');
+  if(id === 'exam') renderExam();
+  else if(id === 'cn') renderConceptNote();
+  else renderModule(parseInt(id));
+  document.getElementById('sidebar').classList.remove('open');
+  window.scrollTo(0, 0);
+}
+
+function renderModule(id) {
+  currentModule = id;
+  const m = MODULES.find(x => x.id === id);
+  if(!m) return;
+  if(!currentTab[id]) currentTab[id] = 'notes';
+  const main = document.getElementById('mainContent');
+  main.innerHTML = `
+    <div class="module-header">
+      <div class="mod-num">Module ${m.id} of ${MODULES.length}</div>
+      <h1>${m.title}</h1>
+      <p class="mod-desc">${m.desc}</p>
+    </div>
+    <div class="tabs">
+      <div class="tab ${currentTab[id]==='notes'?'active':''}" onclick="switchTab(${id},'notes')"><i class="fas fa-book-open" style="margin-right:6px"></i>Notes</div>
+      <div class="tab ${currentTab[id]==='quotes'?'active':''}" onclick="switchTab(${id},'quotes')"><i class="fas fa-quote-left" style="margin-right:6px"></i>Key Quotes</div>
+      <div class="tab ${currentTab[id]==='refs'?'active':''}" onclick="switchTab(${id},'refs')"><i class="fas fa-scroll" style="margin-right:6px"></i>References</div>
+      <div class="tab ${currentTab[id]==='quiz'?'active':''}" onclick="switchTab(${id},'quiz')"><i class="fas fa-brain" style="margin-right:6px"></i>Quiz</div>
+    </div>
+    <div id="tab-notes" class="tab-content ${currentTab[id]==='notes'?'active':''}">
+      ${m.notes.map((n,i) => `
+        <div class="card" style="animation-delay:${i*0.05}s">
+          <h3 style="border-left:3px solid var(--accent);padding-left:12px;margin-bottom:16px">${n.heading}</h3>
+          <div style="font-size:14px;color:var(--fg2);line-height:1.9;white-space:pre-wrap">${n.body}</div>
+        </div>`).join('')}
+    </div>
+    <div id="tab-quotes" class="tab-content ${currentTab[id]==='quotes'?'active':''}">
+      ${m.quotes.map(q => `
+        <div class="quote-block">
+          <p>${q.text}</p>
+          <div class="author">— ${q.author}</div>
+        </div>`).join('')}
+    </div>
+    <div id="tab-refs" class="tab-content ${currentTab[id]==='refs'?'active':''}">
+      <div class="card">
+        <h3><i class="fas fa-scroll" style="margin-right:8px;color:var(--accent)"></i>Key References</h3>
+        <ul class="ref-list">
+          ${m.refs.map(r => `<li>${r}</li>`).join('')}
+        </ul>
+      </div>
+    </div>
+    <div id="tab-quiz" class="tab-content ${currentTab[id]==='quiz'?'active':''}">
+      <div class="quiz-container" id="quiz-${id}">
+        ${renderQuiz(m, id)}
+      </div>
+    </div>
+    <div class="module-nav">
+      ${id > 1 ? `<button onclick="navigate(${id-1})"><i class="fas fa-arrow-left"></i> Module ${id-1}</button>` : '<span></span>'}
+      ${id < MODULES.length ? `<button onclick="navigate(${id+1})">Module ${id+1} <i class="fas fa-arrow-right"></i></button>` : `<button onclick="navigate('exam')"><i class="fas fa-graduation-cap"></i> Take Exam</button>`}
+    </div>
+  `;
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const navEl = document.getElementById('nav-' + id);
+  if(navEl) navEl.classList.add('active');
+}
+
+function switchTab(moduleId, tab) {
+  currentTab[moduleId] = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  event.target.closest('.tab').classList.add('active');
+  const tc = document.getElementById('tab-' + tab);
+  if(tc) { tc.classList.add('active'); }
+}
+
+function renderQuiz(m, id) {
+  const answered = quizAnswered[id] || {};
+  const allAnswered = m.quiz.every((_, i) => answered[i] !== undefined);
+  const score = Object.values(answered).filter((a, i) => a === m.quiz[Object.keys(answered)[i]]?.ans).length;
+  
+  return `
+    ${m.quiz.map((q, i) => {
+      const userAns = answered[i];
+      const isAnswered = userAns !== undefined;
+      const isCorrect = isAnswered && userAns === q.ans;
+      return `
+        <div class="quiz-q ${isAnswered ? (isCorrect ? 'correct' : 'wrong') : ''}" id="qq-${id}-${i}">
+          <div class="q-num">Question ${i+1} of ${m.quiz.length}</div>
+          <div class="q-text">${q.q}</div>
+          <div class="quiz-options">
+            ${q.opts.map((opt, j) => {
+              let cls = 'quiz-opt';
+              if(isAnswered) {
+                cls += ' disabled';
+                if(j === q.ans) cls += ' correct-answer';
+                else if(j === userAns && userAns !== q.ans) cls += ' wrong-answer';
+              }
+              return `<div class="${cls}" onclick="answerQuiz(${id},${i},${j})">${opt}</div>`;
+            }).join('')}
+          </div>
+          ${isAnswered ? `<div class="quiz-feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}">
+            <strong>${isCorrect ? '✓ Correct!' : '✗ Incorrect.'}</strong> ${q.fb}
+          </div>` : ''}
+        </div>`;
+    }).join('')}
+    <div class="quiz-score ${allAnswered ? 'show' : ''}" id="score-${id}">
+      <h3>Module ${id} Score</h3>
+      <p>You answered <strong>${Object.keys(answered).filter(i => answered[i] === m.quiz[i]?.ans).length}</strong> out of <strong>${m.quiz.length}</strong> correctly.</p>
+      <button class="btn-quiz" onclick="resetQuiz(${id})"><i class="fas fa-redo" style="margin-right:6px"></i>Retry Quiz</button>
+    </div>
+  `;
+}
+
+function answerQuiz(moduleId, qIdx, optIdx) {
+  if(!quizAnswered[moduleId]) quizAnswered[moduleId] = {};
+  if(quizAnswered[moduleId][qIdx] !== undefined) return;
+  quizAnswered[moduleId][qIdx] = optIdx;
+  const m = MODULES.find(x => x.id === moduleId);
+  const q = m.quiz[qIdx];
+  const isCorrect = optIdx === q.ans;
+  const container = document.getElementById(`qq-${moduleId}-${qIdx}`);
+  if(container) {
+    container.classList.add(isCorrect ? 'correct' : 'wrong');
+    container.querySelectorAll('.quiz-opt').forEach((opt, j) => {
+      opt.classList.add('disabled');
+      if(j === q.ans) opt.classList.add('correct-answer');
+      else if(j === optIdx && !isCorrect) opt.classList.add('wrong-answer');
+    });
+    const fb = document.createElement('div');
+    fb.className = `quiz-feedback show ${isCorrect ? 'correct-fb' : 'wrong-fb'}`;
+    fb.innerHTML = `<strong>${isCorrect ? '✓ Correct!' : '✗ Incorrect.'}</strong> ${q.fb}`;
+    container.appendChild(fb);
+  }
+  if(m.quiz.every((_, i) => quizAnswered[moduleId][i] !== undefined)) {
+    const scoreEl = document.getElementById('score-' + moduleId);
+    if(scoreEl) {
+      const correct = Object.keys(quizAnswered[moduleId]).filter(i => quizAnswered[moduleId][i] === m.quiz[i]?.ans).length;
+      scoreEl.innerHTML = `<h3>Module ${moduleId} Score</h3>
+        <p>You answered <strong>${correct}</strong> out of <strong>${m.quiz.length}</strong> correctly.</p>
+        <button class="btn-quiz" onclick="resetQuiz(${moduleId})"><i class="fas fa-redo" style="margin-right:6px"></i>Retry Quiz</button>`;
+      scoreEl.classList.add('show');
+      completedModules.add(moduleId);
+      updateProgress();
+      document.getElementById(`nav-${moduleId}`)?.classList.add('completed');
+    }
+    showToast(`Module ${moduleId} quiz complete! 🎉`);
+  }
+}
+
+function resetQuiz(moduleId) {
+  delete quizAnswered[moduleId];
+  renderModule(moduleId);
+  switchTabDirect(moduleId, 'quiz');
+}
+
+function switchTabDirect(moduleId, tab) {
+  currentTab[moduleId] = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => {
+    if(t.textContent.toLowerCase().includes(tab)) t.classList.add('active');
+  });
+  const tc = document.getElementById('tab-' + tab);
+  if(tc) tc.classList.add('active');
+}
+
+function updateProgress() {
+  const pct = Math.round((completedModules.size / MODULES.length) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = `${completedModules.size} / ${MODULES.length} modules completed`;
+}
+
+// ===== EXAM =====
+function renderExam() {
+  const main = document.getElementById('mainContent');
+  main.innerHTML = `
+    <div class="exam-header">
+      <h1><i class="fas fa-graduation-cap" style="margin-right:12px"></i>Comprehensive Exam</h1>
+      <p>Test your knowledge across all 10 modules. 25 questions covering every topic in the course.</p>
+      ${!examStarted ? '' : `<div class="exam-timer"><i class="fas fa-clock"></i><span id="examTimerDisplay">${formatTime(examTimeLeft)}</span></div>`}
+    </div>
+    ${!examStarted ? `
+      <div class="exam-instructions card">
+        <h3><i class="fas fa-info-circle" style="margin-right:8px;color:var(--accent)"></i>Instructions</h3>
+        <ul style="margin-top:12px;padding-left:20px">
+          <li style="margin-bottom:8px;color:var(--fg2);font-size:14px">The exam contains <strong>25 multiple-choice questions</strong> spanning all 10 modules.</li>
+          <li style="margin-bottom:8px;color:var(--fg2);font-size:14px">You have <strong>60 minutes</strong> to complete the exam.</li>
+          <li style="margin-bottom:8px;color:var(--fg2);font-size:14px">Each question is worth 1 mark. Your final score will be shown as a percentage.</li>
+          <li style="margin-bottom:8px;color:var(--fg2);font-size:14px">Review your module notes and quizzes before attempting this exam.</li>
+          <li style="margin-bottom:8px;color:var(--fg2);font-size:14px">A score of <strong>70% or above</strong> is considered a pass.</li>
+        </ul>
+        <button class="btn-quiz" style="margin-top:20px" onclick="startExam()"><i class="fas fa-play" style="margin-right:8px"></i>Start Exam</button>
+      </div>` : renderExamQuestions()}
+  `;
+}
+
+function startExam() {
+  examStarted = true;
+  examAnswers = {};
+  examTimeLeft = 60 * 60;
+  renderExam();
+  examTimer = setInterval(() => {
+    examTimeLeft--;
+    const td = document.getElementById('examTimerDisplay');
+    if(td) td.textContent = formatTime(examTimeLeft);
+    if(examTimeLeft <= 0) { clearInterval(examTimer); submitExam(); }
+  }, 1000);
+}
+
+function formatTime(s) {
+  const m = Math.floor(s/60);
+  const sec = s % 60;
+  return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+}
+
+function renderExamQuestions() {
+  const submitted = Object.keys(examAnswers).length === EXAM_QUESTIONS.length && document.getElementById('examResult');
+  return `
+    <div id="examQContainer">
+      ${EXAM_QUESTIONS.map((q,i) => `
+        <div class="quiz-q" id="eq-${i}" style="border-left:3px solid var(--border)">
+          <div class="q-num" style="display:flex;justify-content:space-between">
+            <span>Question ${i+1} of ${EXAM_QUESTIONS.length}</span>
+            <span class="tag">${q.module}</span>
+          </div>
+          <div class="q-text">${q.q}</div>
+          <div class="quiz-options">
+            ${q.opts.map((opt,j) => `
+              <div class="quiz-opt ${examAnswers[i]===j?'selected':''}" onclick="selectExamAnswer(${i},${j})">${opt}</div>
+            `).join('')}
+          </div>
+        </div>`).join('')}
+      <div style="display:flex;gap:12px;margin-top:24px;align-items:center">
+        <button class="btn-quiz" onclick="submitExam()"><i class="fas fa-paper-plane" style="margin-right:8px"></i>Submit Exam</button>
+        <span style="font-size:13px;color:var(--muted)">${Object.keys(examAnswers).length} / ${EXAM_QUESTIONS.length} answered</span>
+      </div>
+      <div class="exam-result" id="examResult"></div>
+    </div>
+  `;
+}
+
+function selectExamAnswer(qIdx, optIdx) {
+  if(document.querySelector(`#eq-${qIdx} .correct-answer`)) return;
+  examAnswers[qIdx] = optIdx;
+  document.querySelectorAll(`#eq-${qIdx} .quiz-opt`).forEach((o,j) => {
+    o.classList.toggle('selected', j === optIdx);
+  });
+  const counter = document.querySelector('[onclick="submitExam()"] + span');
+  if(counter) counter.textContent = `${Object.keys(examAnswers).length} / ${EXAM_QUESTIONS.length} answered`;
+}
+
+function submitExam() {
+  clearInterval(examTimer);
+  examStarted = false;
+  let correct = 0;
+  EXAM_QUESTIONS.forEach((q,i) => { if(examAnswers[i] === q.ans) correct++; });
+  const pct = Math.round((correct / EXAM_QUESTIONS.length) * 100);
+  const grade = pct >= 90 ? 'A — Distinction' : pct >= 75 ? 'B — Credit' : pct >= 60 ? 'C — Pass' : pct >= 50 ? 'D — Borderline' : 'F — Fail';
+  const gradeColor = pct >= 75 ? 'var(--green)' : pct >= 50 ? 'var(--accent)' : 'var(--red)';
+
+  EXAM_QUESTIONS.forEach((q,i) => {
+    const container = document.getElementById(`eq-${i}`);
+    if(!container) return;
+    container.querySelectorAll('.quiz-opt').forEach((o,j) => {
+      o.classList.add('disabled');
+      if(j === q.ans) o.classList.add('correct-answer');
+      else if(j === examAnswers[i] && examAnswers[i] !== q.ans) o.classList.add('wrong-answer');
+    });
+  });
+
+  const resultEl = document.getElementById('examResult');
+  if(resultEl) {
+    resultEl.innerHTML = `
+      <div class="big-score">${pct}%</div>
+      <div class="grade" style="color:${gradeColor}">${grade}</div>
+      <p style="margin-top:16px;color:var(--fg2)">You answered <strong>${correct}</strong> out of <strong>${EXAM_QUESTIONS.length}</strong> questions correctly.</p>
+      <button class="btn-quiz" style="margin-top:20px" onclick="examStarted=false;navigate('exam')"><i class="fas fa-redo" style="margin-right:8px"></i>Retake Exam</button>
+    `;
+    resultEl.classList.add('show');
+    resultEl.scrollIntoView({behavior:'smooth'});
+  }
+  showToast(`Exam submitted! Score: ${pct}%`);
+}
+
+// ===== CONCEPT NOTE FORM =====
+function renderConceptNote() {
+  const main = document.getElementById('mainContent');
+  main.innerHTML = `
+    <div class="module-header">
+      <div class="mod-num">Module 10 — Practical Exercise</div>
+      <h1>Concept Note Builder</h1>
+      <p class="mod-desc">Complete this structured form to develop your research concept note. Each section includes guidance from course materials to help you write effectively.</p>
+    </div>
+    <div class="cn-form" id="cnForm">
+      ${CN_SECTIONS.map(s => `
+        <div class="cn-section">
+          <h3>${s.label}</h3>
+          <div class="cn-hint">${s.hint}</div>
+          ${s.type === 'textarea' 
+            ? `<textarea id="cn-${s.id}" placeholder="${s.placeholder}" rows="5"></textarea>`
+            : s.type === 'select'
+            ? `<select id="cn-${s.id}">${(s.options||[]).map(o=>`<option>${o}</option>`).join('')}</select>`
+            : `<input type="text" id="cn-${s.id}" placeholder="${s.placeholder}">`}
+        </div>`).join('')}
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px">
+        <button class="btn-cn" onclick="previewConceptNote()"><i class="fas fa-eye" style="margin-right:8px"></i>Preview Concept Note</button>
+        <button class="btn-preview" onclick="downloadConceptNote()"><i class="fas fa-download" style="margin-right:8px"></i>Download as Text</button>
+        <button class="btn-preview" onclick="clearConceptNote()"><i class="fas fa-trash" style="margin-right:8px"></i>Clear Form</button>
+      </div>
+    </div>
+  `;
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('nav-cn')?.classList.add('active');
+}
+
+function getConceptNoteData() {
+  return CN_SECTIONS.reduce((acc, s) => {
+    const el = document.getElementById('cn-' + s.id);
+    acc[s.id] = el ? el.value.trim() : '';
+    return acc;
+  }, {});
+}
+
+function previewConceptNote() {
+  const data = getConceptNoteData();
+  const modal = document.getElementById('previewModal');
+  const content = document.getElementById('modalContent');
+  content.innerHTML = `
+    <h2><i class="fas fa-file-alt" style="margin-right:10px"></i>Concept Note Preview</h2>
+    ${CN_SECTIONS.map(s => data[s.id] ? `
+      <h4>${s.label}</h4>
+      <p>${data[s.id]}</p>` : '').join('')}
+  `;
+  modal.classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('previewModal').classList.remove('show');
+}
+
+function downloadConceptNote() {
+  const data = getConceptNoteData();
+  let text = 'RESEARCH CONCEPT NOTE\n' + '='.repeat(60) + '\n\n';
+  CN_SECTIONS.forEach(s => {
+    if(data[s.id]) text += `${s.label.toUpperCase()}\n${'-'.repeat(40)}\n${data[s.id]}\n\n`;
+  });
+  const blob = new Blob([text], {type:'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'concept_note.txt';
+  a.click();
+  showToast('Concept note downloaded!');
+}
+
+function clearConceptNote() {
+  if(confirm('Clear all fields? This cannot be undone.')) {
+    CN_SECTIONS.forEach(s => {
+      const el = document.getElementById('cn-' + s.id);
+      if(el) el.value = '';
+    });
+    showToast('Form cleared.');
+  }
+}
+
+// ===== DOWNLOAD NOTES =====
+function downloadNotes() {
+  let text = 'CS RESEARCH METHODS — STUDY NOTES\n' + '='.repeat(60) + '\n\n';
+  MODULES.forEach(m => {
+    text += `MODULE ${m.id}: ${m.title.toUpperCase()}\n${'='.repeat(60)}\n\n`;
+    m.notes.forEach(n => {
+      text += `${n.heading}\n${'-'.repeat(40)}\n`;
+      text += n.body.replace(/<[^>]+>/g, '') + '\n\n';
+    });
+    text += '\nKEY QUOTES\n' + '-'.repeat(40) + '\n';
+    m.quotes.forEach(q => { text += `"${q.text}"\n— ${q.author}\n\n`; });
+    text += '\nREFERENCES\n' + '-'.repeat(40) + '\n';
+    m.refs.forEach(r => { text += `• ${r}\n`; });
+    text += '\n\n';
+  });
+  const blob = new Blob([text], {type:'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'cs_research_methods_notes.txt';
+  a.click();
+  showToast('Study notes downloaded!');
+}
+
+// ===== SEARCH =====
+function setupSearch() {
+  const input = document.getElementById('searchInput');
+  const results = document.getElementById('searchResults');
+  input.addEventListener('input', () => {
+    const q = input.value.trim().toLowerCase();
+    if(q.length < 2) { results.classList.remove('show'); return; }
+    const hits = [];
+    MODULES.forEach(m => {
+      m.notes.forEach(n => {
+        const plain = n.body.replace(/<[^>]+>/g,'');
+        const idx = plain.toLowerCase().indexOf(q);
+        if(idx !== -1) {
+          const snippet = plain.substring(Math.max(0, idx-40), idx+80).replace(q, `<mark>${q}</mark>`);
+          hits.push({module: `Module ${m.id}: ${m.title}`, text: '...' + snippet + '...', id: m.id, heading: n.heading});
+        }
+      });
+      m.quotes.forEach(qu => {
+        if(qu.text.toLowerCase().includes(q)) {
+          hits.push({module: `Module ${m.id}: ${m.title}`, text: qu.text.replace(new RegExp(q,'gi'), `<mark>$&</mark>`), id: m.id, heading: 'Quote'});
+        }
+      });
+    });
+    if(hits.length === 0) {
+      results.innerHTML = '<div class="search-result-item"><div class="sr-text" style="color:var(--muted)">No results found.</div></div>';
+    } else {
+      results.innerHTML = hits.slice(0, 8).map(h => `
+        <div class="search-result-item" onclick="navigate(${h.id});results.classList.remove('show');input.value=''">
+          <div class="sr-module">${h.module} — ${h.heading}</div>
+          <div class="sr-text">${h.text}</div>
+        </div>`).join('');
+    }
+    results.classList.add('show');
+  });
+  document.addEventListener('click', e => {
+    if(!e.target.closest('.search-box')) results.classList.remove('show');
+  });
+}
+
+// ===== TOAST =====
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>

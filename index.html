@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Vault - Course Revisions</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: #05080A; 
+            color: #E8E4DC;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container { 
+            max-width: 900px; 
+            width: 90%;
+            text-align: center;
+        }
+        h1 { font-size: 3em; margin-bottom: 12px; color: #c6f91f; }
+        .subtitle { font-size: 1.2em; color: #999; margin-bottom: 40px; }
+        .courses { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin-top: 40px;
+        }
+        .course-card { 
+            background: #0E1A15; 
+            border: 1px solid #1E3A2F;
+            border-radius: 12px;
+            padding: 32px;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: inherit;
+        }
+        .course-card:hover { 
+            border-color: #D4A843;
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(212, 168, 67, 0.1);
+        }
+        .course-icon { font-size: 3em; margin-bottom: 12px; }
+        .course-title { font-size: 1.5em; font-weight: 700; margin-bottom: 8px; color: #D4A843; }
+        .course-desc { color: #999; font-size: 0.95em; line-height: 1.6; }
+        .btn-enter { 
+            display: inline-block;
+            margin-top: 16px;
+            padding: 10px 24px;
+            background: #D4A843;
+            color: #080D0B;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.9em;
+            transition: all 0.2s;
+        }
+        .btn-enter:hover { background: #E8C76A; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎓 Study Vault</h1>
+        <p class="subtitle">Interactive course revisions for mastery</p>
+        
+        <div class="courses">
+            <a href="xai/" class="course-card">
+                <div class="course-icon">🧠</div>
+                <div class="course-title">Explainable AI (XAI)</div>
+                <p class="course-desc">9 modules covering interpretability techniques, SHAP, LIME, feature importance, and responsible AI principles.</p>
+                <span class="btn-enter">→ Enter Course</span>
+            </a>
+            
+            <a href="cs-research/" class="course-card">
+                <div class="course-icon">🔬</div>
+                <div class="course-title">CS Research Methods</div>
+                <p class="course-desc">10 modules on research design, literature review, paradigms, quantitative & qualitative methods, and ethics.</p>
+                <span class="btn-enter">→ Enter Course</span>
+            </a>
+        </div>
+
+        <p style="margin-top: 60px; color: #666; font-size: 0.9em;">
+            Built with care for self-directed learning • <a href="https://github.com/ai-study-vault" style="color: #D4A843; text-decoration: none;">GitHub</a>
+        </p>
+    </div>
+</body>
+</html>

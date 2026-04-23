@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XAI Revision Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *{font-family:'Inter',sans-serif}
+        .font-geist{font-family:'Geist',sans-serif}
+        body{background:#05080A}
+        ::-webkit-scrollbar{width:6px}
+        ::-webkit-scrollbar-track{background:#0B0F13}
+        ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px}
+        ::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,0.2)}
+        .module-btn.active{background:rgba(198,249,31,0.1);border-color:rgba(198,249,31,0.3);color:#c6f91f}
+        .module-btn.completed .cdot{background:#c6f91f;box-shadow:0 0 8px rgba(198,249,31,0.4)}
+        .tab-btn.active{color:#c6f91f;border-color:#c6f91f}
+        .answer-reveal{max-height:0;overflow:hidden;transition:max-height 0.4s ease,padding 0.4s ease}
+        .answer-reveal.open{max-height:2000px;padding-top:16px;padding-bottom:16px}
+        @keyframes reveal{from{opacity:0;transform:translateY(20px);filter:blur(8px)}to{opacity:1;transform:translateY(0);filter:blur(0)}}
+        .anim-reveal{animation:reveal 0.6s cubic-bezier(0.2,0.8,0.2,1) both}
+        .flashcard{perspective:1000px}
+        .flashcard-inner{transition:transform 0.5s;transform-style:preserve-3d;position:relative}
+        .flashcard.flipped .flashcard-inner{transform:rotateY(180deg)}
+        .flashcard-front,.flashcard-back{backface-visibility:hidden;position:absolute;inset:0}
+        .flashcard-back{transform:rotateY(180deg)}
+        .quiz-option{transition:all 0.2s}
+        .quiz-option.selected{border-color:rgba(198,249,31,0.5);background:rgba(198,249,31,0.05)}
+        .quiz-option.correct{border-color:#22c55e!important;background:rgba(34,197,94,0.1)!important}
+        .quiz-option.incorrect{border-color:#ef4444!important;background:rgba(239,68,68,0.1)!important}
+        .sidebar-scroll{max-height:calc(100vh - 120px);overflow-y:auto}
+        @media(max-width:1023px){.sidebar-scroll{max-height:180px}}
+        .note-section{border-left:2px solid rgba(198,249,31,0.2);padding-left:20px;margin-bottom:28px}
+        .note-section h3{color:#c6f91f;font-size:13px;font-weight:600;margin-bottom:10px;letter-spacing:0.02em}
+        .note-section p,.note-section li{color:rgba(255,255,255,0.7);font-size:13px;line-height:1.8}
+        .note-section ul,.note-section ol{padding-left:18px;margin-top:8px}
+        .note-section li{margin-bottom:5px}
+        .note-section strong{color:rgba(255,255,255,0.92)}
+        .note-section em{color:rgba(198,249,31,0.7);font-style:normal;font-weight:500}
+        .note-section .formula{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);border-radius:6px;padding:12px 16px;margin:10px 0;font-family:monospace;font-size:12px;color:rgba(255,255,255,0.8);line-height:1.9;overflow-x:auto}
+        .note-section .table-wrap{overflow-x:auto;margin:10px 0}
+        .note-section table{border-collapse:collapse;width:100%;font-size:12px}
+        .note-section th{background:rgba(198,249,31,0.06);color:#c6f91f;font-weight:500;text-align:left;padding:8px 12px;border:1px solid rgba(255,255,255,0.06)}
+        .note-section td{color:rgba(255,255,255,0.65);padding:7px 12px;border:1px solid rgba(255,255,255,0.04)}
+        .note-section td:first-child{color:rgba(255,255,255,0.8);font-weight:500}
+        .code-block{background:#0B0F13;border:1px solid rgba(255,255,255,0.06);border-radius:8px;overflow:hidden;margin-bottom:20px}
+        .code-header{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.05);background:rgba(255,255,255,0.02)}
+        .code-header span{font-size:11px;color:rgba(255,255,255,0.4);font-family:monospace}
+        .code-copy{display:flex;align-items:center;gap:5px;padding:4px 10px;border:1px solid rgba(255,255,255,0.08);border-radius:4px;background:transparent;color:rgba(255,255,255,0.4);font-size:10px;cursor:pointer;transition:all 0.2s;font-family:'Inter',sans-serif}
+        .code-copy:hover{border-color:rgba(198,249,31,0.3);color:#c6f91f;background:rgba(198,249,31,0.05)}
+        .code-copy.copied{border-color:#22c55e;color:#22c55e}
+        .code-body{padding:16px;overflow-x:auto;font-family:'SF Mono','Fira Code','Cascadia Code',monospace;font-size:12px;line-height:1.75;color:rgba(255,255,255,0.75);tab-size:4}
+        .code-body .kw{color:#c792ea}
+        .code-body .fn{color:#82aaff}
+        .code-body .str{color:#c3e88d}
+        .code-body .cm{color:#546e7a;font-style:italic}
+        .code-body .num{color:#f78c6c}
+        .code-body .op{color:#89ddff}
+        .code-body .var{color:#eeffff}
+        .code-body .imp{color:#c792ea}
+        .code-body .cls{color:#ffcb6b}
+        .code-body .dec{color:#f07178}
+        .code-comment-block{border-left:2px solid rgba(198,249,31,0.2);padding:12px 16px;margin-bottom:20px;background:rgba(198,249,31,0.02);border-radius:0 6px 6px 0}
+        .code-comment-block p{font-size:13px;line-height:1.7;color:rgba(255,255,255,0.65)}
+        .code-comment-block strong{color:rgba(198,249,31,0.8);font-weight:600}
+        @keyframes pulse-glow{0%,100%{box-shadow:0 0 5px rgba(198,249,31,0.2)}50%{box-shadow:0 0 15px rgba(198,249,31,0.4)}}
+        .glow-pulse{animation:pulse-glow 2s ease-in-out infinite}
+    </style>
+</head>
+<body class="text-white min-h-screen">
+
+<div class="fixed inset-0 pointer-events-none z-0">
+    <div class="absolute top-0 left-1/4 w-[600px] h-[600px] bg-[#c6f91f]/[0.02] rounded-full blur-[120px]"></div>
+    <div class="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-slate-500/[0.03] rounded-full blur-[120px]"></div>
+</div>
+
+<div class="relative z-10">
+    <header class="sticky top-0 z-50 border-b border-white/[0.05] bg-[#05080A]/90 backdrop-blur-xl">
+        <div class="max-w-screen-2xl mx-auto px-4 sm:px-8 h-16 sm:h-20 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-[#c6f91f] rounded-sm flex items-center justify-center"><i data-lucide="brain" class="w-4 h-4 text-black"></i></div>
+                <div><span class="font-geist font-semibold text-sm sm:text-base tracking-tight">XAI Revision Hub</span><span class="hidden sm:inline text-xs text-white/30 ml-2">Explainable AI</span></div>
+            </div>
+            <div class="flex items-center gap-4 sm:gap-6">
+                <div class="hidden sm:flex items-center gap-2 text-xs text-white/50"><i data-lucide="clock" class="w-3.5 h-3.5"></i><span id="studyTimer">00:00:00</span></div>
+                <button onclick="showFinalExam()" class="flex items-center gap-2 px-3 py-1.5 bg-[#c6f91f] text-black text-xs font-medium rounded-sm hover:bg-[#d4ff4a] transition-colors"><i data-lucide="file-text" class="w-3.5 h-3.5"></i><span class="hidden sm:inline">Final Exam</span></button>
+            </div>
+        </div>
+    </header>
+    <main class="max-w-screen-2xl mx-auto px-4 sm:px-8 py-6 sm:py-10">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
+            <aside class="lg:col-span-3 xl:col-span-2">
+                <div class="lg:sticky lg:top-28">
+                    <div class="flex items-center justify-between mb-4"><h2 class="text-xs font-medium uppercase tracking-widest text-white/40">Modules</h2></div>
+                    <div id="sidebarModules" class="sidebar-scroll flex lg:flex-col gap-2 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0"></div>
+                    <div class="mt-6 hidden lg:block">
+                        <h3 class="text-xs font-medium uppercase tracking-widest text-white/40 mb-3">Quick Stats</h3>
+                        <div class="space-y-2">
+                            <div class="flex justify-between text-xs"><span class="text-white/50">Quizzes Done</span><span id="quizDone" class="text-[#c6f91f]">0/9</span></div>
+                            <div class="flex justify-between text-xs"><span class="text-white/50">Flashcards Flipped</span><span id="cardsFlipped" class="text-[#c6f91f]">0</span></div>
+                            <div class="flex justify-between text-xs"><span class="text-white/50">Exam Opened</span><span id="examStatus" class="text-white/50">No</span></div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+            <div class="lg:col-span-9 xl:col-span-10"><div id="mainContent"></div></div>
+        </div>
+    </main>
+</div>
+
+<div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+    <div class="flex items-center gap-3 bg-[#15191E] border border-[#c6f91f]/20 rounded-lg px-5 py-3 shadow-lg"><i data-lucide="check-circle" class="w-4 h-4 text-[#c6f91f]"></i><span id="toastMsg" class="text-sm text-white/80"></span></div>
+</div>
+
+<script>
+const M=[
+{
+id:1,title:"Intro to XAI",short:"Intro",
+notes:[
+{h:"The Need for Responsible and Explainable AI",c:`Artificial intelligence (AI) has been adopted in many spheres of human life and is ubiquitously being employed in decision making in a wide range of sectors: <strong>Health</strong> — used for diagnosis and to recommend treatments. <strong>Law</strong> — used to assess suspects for recidivism and also identify suspects. <strong>Education</strong> — used in automatic grading and assessing candidates for university placement. <strong>Finance</strong> — used to assess a client for credit worthiness. <strong>Military</strong> — used to select military targets to be attacked during war. In these applications, AI models make decisions that can have a <strong>profound effect on human lives</strong>. It is therefore becoming increasingly necessary to comprehend how AI systems go about making these important decisions in order to determine if these decisions are justified (Arrieta et al., 2020).`},
+{h:"Harm from AI Systems",c:`According to Baker & Xiang (2023), just like any other tool, "AI can also cause great harm if developed and used improperly or inappropriately." This harmfulness can be either <strong>intentional (malicious)</strong> or <strong>by accident</strong>. Examples of harm include:<ul><li>Bias in rejection of loan applications and job placement</li><li>Flagging of a transaction as fraudulent while it isn't</li><li>Incorrect diagnosis of diseases</li><li>Inappropriate selection of a military target</li></ul>`},
+{h:"Defining Responsible AI (RAI)",c:`Responsible AI (RAI) emerged out of the need to develop AI such that it is <strong>beneficial to humans and society in general</strong> (Baker & Xiang, 2023). It involves applying ethics in the development and use of AI systems for the greater good of humanity. RAI has many components but the main ones identified include: <em>fairness</em> (or lack of bias), <em>robustness</em> (reliability), <em>transparency</em>, <em>accountability</em>, <em>privacy</em>, and <em>safety</em>.`},
+{h:"Defining Explainable AI (XAI)",c:`Explainability is related to transparency and is one component of RAI. Explainable AI (XAI) is "focused on providing humans with insight into the reasoning of AI models during their decision making processes" (Baker & Xiang, 2023). <strong>Explanation</strong> is the ability of a system to generate accompanying evidence or reasons for outputs and/or processes (Phillips et al., 2021). According to Baker & Xiang (2023), Explainability is a <strong>key pillar</strong> because it is useful in providing evidence of the attainment of all other RAI components.`},
+{h:"Why XAI Is Necessary — The Black-Box Problem",c:`According to Baker & Xiang (2023), explainability is necessary because of the <strong>increasing complexity of AI models</strong>. Early models such as linear regression, decision trees and k-nearest neighbours are explainable because the mechanism by which they connect their inputs to the outputs is easy to understand and can be replicated by humans. However, their performance is not as good as more recent techniques like <strong>ensemble methods</strong> and <strong>deep learning based models</strong>. These recent methods have much better performance, but the mechanism they use to transform inputs to outputs is not inherently understandable to humans — they are sometimes referred to as <strong>black-box models</strong>. In order to increase trust in such models, their decision-making criteria must be revealed to humans. This contributes to the development of <strong>trustworthy AI Systems</strong>.`},
+{h:"Audience Considerations for XAI",c:`In implementing XAI, it is always desirable to consider the audience for whom the explanation is generated. The audience usually consists of:<ul><li><strong>Developers</strong> — explanations should be geared towards helping them debug and improve the models.</li><li><strong>End users</strong> — the goal is to consider if the system is considering the right factors or attributes in decision making.</li></ul>The explanations generated should be <strong>meaningful and accurate</strong> (Phillips et al., 2021).`},
+{h:"Legal and Regulatory Drivers of XAI",c:`The need for XAI may also arise out of legal and regulatory requirements:<ul><li><strong>Fair Credit Reporting Act (FCRA) — USA:</strong> Section 609(f) requires credit reporting agencies to disclose to consumers the key factors that affected the consumer's credit score.</li><li><strong>EU General Data Protection Regulation (GDPR):</strong> Article 13(2)(f) requires that in the case of the existence of automated decision making, meaningful information about the logic involved in the processing should be provided to the data subject.</li></ul>`},
+{h:"Explainability by Design (Intrinsic Interpretability)",c:`Explainability by design refers to models which are considered interpretable by default — they are <strong>intrinsically interpretable</strong>. Models in this category include:<ol><li><strong>Linear Regression (LR)</strong> — contribution of each attribute determined from its coefficient. Interpretability decreases as number of predictors increases.</li><li><strong>Generalized Additive Models (GAMs)</strong> — not constrained to linear features; non-linear functions added together.</li><li><strong>Logistic Regression</strong> — binary classification; visual probability separation between classes.</li><li><strong>Decision Trees</strong> — inverted tree structure; path from root to leaf = decision rule.</li><li><strong>k-Nearest Neighbours</strong> — decision explained by k neighbours' characteristics. Explainability decreases as k increases.</li><li><strong>Support Vector Machines</strong> — explainable in low dimensions via visualised separating hyperplane.</li></ol>`},
+{h:"Post-Hoc Explainability",c:`Post-hoc explainability refers to explanations generated <strong>after model creation</strong>. Two key classifications:<ul><li><strong>Local vs Global:</strong> Local = for a given data point. Global = general criteria across all data.</li><li><strong>Model-agnostic vs Model-specific:</strong> Model-agnostic works with any model class. Model-specific applies to a given class only.</li></ul>`},
+{h:"Post-Hoc XAI Techniques Classification Table",c:`<div class="table-wrap"><table><tr><th>Algorithm</th><th>Description</th><th>Scope</th><th>Type</th></tr><tr><td>Permutation Importance</td><td>Ranks features by importance</td><td>Global</td><td>Model Agnostic</td></tr><tr><td>PDP & ICE Plots</td><td>Feature values vs output plots</td><td>Global/Local</td><td>Model Agnostic</td></tr><tr><td>SHAP</td><td>Feature combinations for importance</td><td>Both</td><td>Model Agnostic</td></tr><tr><td>LIME</td><td>Local surrogate models</td><td>Local</td><td>Model Agnostic</td></tr><tr><td>Class Activation Mapping</td><td>Image area heatmaps</td><td>Local</td><td>CNN-Specific</td></tr><tr><td>Counterfactuals</td><td>Input changes for different output</td><td>Local</td><td>Model Agnostic</td></tr><tr><td>Anchors</td><td>If-then rules</td><td>Both</td><td>Model Agnostic</td></tr></table></div>`},
+{h:"The Six Pillars of Responsible AI",c:`<ol><li><strong>Fairness</strong> — free from bias and discrimination; treating categories of people equitably.</li><li><strong>Robustness</strong> — accurate across use cases, resistant to attacks, recoverable from failure.</li><li><strong>Transparency</strong> — decisions describable and reproducible. Balance with privacy/IP protection.</li><li><strong>Accountability</strong> — taking responsibility for AI decisions. "Agency laundering" = blaming the algorithm for bad outcomes (Rubel et al., 2019).</li><li><strong>Privacy</strong> — training data not leaked; systems not reverse-engineerable; consent and notification requirements.</li><li><strong>Safety</strong> — no harm to people or environment (autonomous driving, medical, nuclear reactors).</li></ol>`}
+],
+flashcards:[
+{f:"What is Responsible AI (RAI)?",b:"AI developed to be beneficial to humans and society in general, applying ethics in the development and use of AI systems for the greater good of humanity (Baker & Xiang, 2023)."},
+{f:"Define Explainable AI (XAI)",b:"Focused on providing humans with insight into the reasoning of AI models during their decision making processes (Baker & Xiang, 2023)."},
+{f:"What is a 'black-box' model?",b:"A model whose mechanism for transforming inputs to outputs is not inherently understandable to humans, e.g., deep learning and ensemble methods."},
+{f:"Name two legal/regulatory drivers of XAI",b:"Fair Credit Reporting Act (FCRA) — requires disclosure of key factors affecting credit scores. GDPR Article 13(2)(f) — requires meaningful info about automated decision logic."},
+{f:"What is 'agency laundering'?",b:"When an agency makes decisions in an automated fashion but refuses to take responsibility for bad outcomes, laying the blame on the algorithm/system (Rubel et al., 2019)."},
+{f:"Why is explainability a 'key pillar' of RAI?",b:"Because it provides evidence of the attainment of all other RAI components — fairness, robustness, accountability, privacy, and safety can all be demonstrated through explainability."},
+{f:"Difference between local and global explanation?",b:"Local explains why a specific data point got its prediction. Global explains the general decision-making criteria of the model across all data."},
+{f:"What does 'model-agnostic' mean?",b:"The explanation technique can be applied to any machine learning model class, not tied to a specific type of model."}
+],
+quiz:[
+{q:"XAI is a component of Responsible AI.",type:"tf",a:true},
+{q:"Which of these is an intrinsically interpretable model?",type:"mc",opts:["Deep Neural Network","Random Forest","Linear Regression","Gradient Boosting"],a:2},
+{q:"Post-hoc explainability generates explanations after model creation.",type:"tf",a:true},
+{q:"LIME is a model-specific technique.",type:"tf",a:false},
+{q:"Which regulation requires meaningful information about automated decision logic?",type:"mc",opts:["HIPAA","SOX","GDPR Article 13(2)(f)","PCI DSS"],a:2}
+]
+},
+{
+id:2,title:"Intrinsically Interpretable Models",short:"Intrinsic",
+notes:[
+{h:"Overview of Intrinsically Interpretable Models",c:`Intrinsically interpretable models are those whose internal decision process and predictions can be easily understood by humans <strong>without requiring additional tools or techniques</strong>.`},
+{h:"Linear Regression Interpretation",c:`Coefficients directly indicate the <strong>strength and direction</strong> of the relationship between each feature and the output. A <strong>positive coefficient</strong> implies an increase in that feature increases the predicted outcome. The coefficient = change in output for a <strong>unit change</strong> in the attribute, all others constant.`},
+{h:"Logistic Regression Interpretation",c:`Used for <strong>binary classification</strong>. A coefficient represents the <strong>change in log odds ratio</strong> for a unit change in the variable, where odds = P(x)/(1 − P(x)).<div class="formula">Actual change in odds = e<sup>k</sup></div>`},
+{h:"Decision Trees (CART)",c:`Tree-structured representation based on yes/no questions. Path from root to leaf = <strong>decision rule</strong>. Regression value = average of samples at leaf. Classification = majority class at leaf. <strong>Feature importance</strong> = sum of variance/Gini index reduction across all parent nodes.`},
+{h:"Rule-Based Models: RuleFit",c:`Generates rules using decision tree methods to <strong>capture interactions between attributes</strong>. Rules + original features used in a linear regression model — same explanation techniques apply.`},
+{h:"Rule-Based Models: OneR",c:`Learns rules from <strong>one feature only</strong>. Creates rules for each attribute; selects the attribute whose rules produce the <strong>fewest errors</strong>. Other algorithms: Sequential Covering, Bayesian Rule List.`},
+{h:"Rule Metrics: Support and Accuracy",c:`<strong>Support (Coverage)</strong> = percentage of instances where the IF condition is true. <strong>Accuracy (Confidence)</strong> = percentage of covered instances predicted correctly.`},
+{h:"Linear Regression Feature Importance",c:`<div class="formula">importance(β<sub>i</sub>) = β<sub>i</sub> / SE(β<sub>i</sub>)</div>Higher standard error reduces importance due to lack of certainty. Visualised with horizontal lines: width = confidence interval, center = mean, vertical position = importance.`},
+{h:"R² Score",c:`<div class="formula">R² = Σ(y<sub>i</sub> − ŷ<sub>i</sub>)² / Σ(y<sub>i</sub> − ȳ)²</div>Range 0–1, where 1 = model entirely explains the variance.`}
+],
+flashcards:[
+{f:"What does a positive coefficient mean in linear regression?",b:"An increase in that feature results in an increase in the predicted outcome, all other attributes remaining constant."},
+{f:"How is the actual odds change calculated in logistic regression?",b:"Using the formula e^k, where k is the coefficient value."},
+{f:"How is feature importance calculated for decision trees?",b:"Sum of the reduction of variance (regression) or Gini index (classification) across all parent nodes for that attribute."},
+{f:"What is RuleFit?",b:"Generates rules using decision tree methods to capture feature interactions, then uses both rules and original attributes in a linear regression model."},
+{f:"Define Support and Accuracy for decision rules",b:"Support = percentage of instances where the IF condition is true. Accuracy = percentage of covered instances predicted correctly."},
+{f:"How is feature importance calculated for linear regression?",b:"importance(βᵢ) = βᵢ / SE(βᵢ)"}
+],
+quiz:[
+{q:"In linear regression, a negative coefficient means increasing the feature decreases the output.",type:"tf",a:true},
+{q:"In logistic regression, the actual change in odds for coefficient k is:",type:"mc",opts:["k","2^k","e^k","log(k)"],a:2},
+{q:"Decision tree regression value at a leaf node is the median of samples.",type:"tf",a:false},
+{q:"RuleFit combines decision tree rules with a linear regression model.",type:"tf",a:true},
+{q:"OneR selects the attribute whose rules produce:",type:"mc",opts:["Most coverage","Highest confidence","Fewest errors","Most rules"],a:2}
+]
+},
+{
+id:3,title:"Permutation Feature Importance",short:"PFI",
+notes:[
+{h:"Introduction to PFI",c:`Permutation Feature Importance (PFI) is a <strong>model-agnostic, global</strong> method. It involves <strong>shuffling a feature's values</strong> to disrupt its relationship with the target, then measuring the <strong>drop in model performance</strong>. Greater drop = more important feature.`},
+{h:"Intuition Behind PFI",c:`If value 'a' is associated with output 'c', shuffling might pair 'b' with 'c' — a <strong>spurious</strong> relationship (like saying "2 squared is 6"). The model detects this as incorrect, causing performance to drop.`},
+{h:"Step-by-Step PFI Algorithm",c:`<ol><li><strong>Train the Model</strong> on training set.</li><li><strong>Get Baseline Performance</strong> (accuracy, F1, MSE).</li><li><strong>Feature Permutation:</strong> Shuffle one feature's values across all test samples.</li><li><strong>Re-evaluate Performance</strong> with permuted feature.</li><li><strong>Calculate Importance</strong> = baseline − permuted performance.</li></ol>Steps 3–5 repeated for all features.`},
+{h:"Strengths of PFI",c:`<ul><li><strong>Model-Agnostic:</strong> Works with any ML model.</li><li><strong>Easy to Implement:</strong> Just permute and evaluate.</li><li><strong>Interpretable:</strong> Clear quantitative feature relevance.</li></ul>`},
+{h:"Limitations of PFI",c:`<ul><li><strong>Feature Correlation:</strong> With correlated features, permuting one may not reduce performance — the other still provides similar information.</li><li><strong>Computational Cost:</strong> Re-evaluating for each feature is expensive.</li><li><strong>Metric Dependence:</strong> Importance values depend on the chosen metric.</li></ul>Note: In the diabetes dataset, shuffling s1/s2 actually <strong>reduced</strong> RMSE — possible with correlated/noisy features.`}
+],
+flashcards:[
+{f:"What does PFI measure?",b:"The drop in model performance when a feature's values are shuffled, indicating how important that feature is."},
+{f:"Is PFI model-agnostic?",b:"Yes — it works with any machine learning model without requiring internal access."},
+{f:"What is a major weakness of PFI with correlated features?",b:"Permuting one correlated feature may not significantly reduce performance even if the feature is important."},
+{f:"What are the 5 steps of PFI?",b:"1) Train model, 2) Get baseline performance, 3) Shuffle one feature, 4) Re-evaluate performance, 5) Calculate importance = baseline − permuted. Repeat for all features."},
+{f:"Can shuffling a feature ever reduce the error metric?",b:"Yes — in the diabetes dataset, shuffling s1 and s2 actually reduced RMSE. This can happen with correlated or noisy features."}
+],
+quiz:[
+{q:"PFI is a local explanation technique.",type:"tf",a:false},
+{q:"A larger performance drop after permutation means the feature is:",type:"mc",opts:["Less important","More important","Irrelevant","Correlated"],a:1},
+{q:"PFI works only with decision trees.",type:"tf",a:false},
+{q:"When two features are highly correlated, permuting one may not reduce performance much. This is a strength of PFI.",type:"tf",a:false},
+{q:"PFI importance values depend on:",type:"mc",opts:["Only the model type","Only the dataset size","The performance metric chosen","The programming language"],a:2}
+],
+code:{
+title:"Permutation Feature Importance — Python Implementation",
+description:"This implementation uses the diabetes dataset with a Random Forest Regressor. It demonstrates the full PFI workflow: training a model, establishing a baseline R² score, then computing permutation importance with 10 repeats to get stable estimates with standard deviations.",
+code:`from sklearn.datasets import load_diabetes
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.inspection import permutation_importance
+
+# Load diabetes dataset
+X, y = load_diabetes(return_X_y=True)
+feature_names = load_diabetes().feature_names
+
+# Train-test split
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, random_state=42
+)
+
+# Train model
+model = RandomForestRegressor(random_state=42)
+model.fit(X_train, y_train)
+
+# Baseline performance (R² score)
+baseline_score = model.score(X_test, y_test)
+print(f"Baseline R² score: {baseline_score:.4f}")
+
+# Permutation Feature Importance
+result = permutation_importance(
+    model, X_test, y_test,
+    n_repeats=10, random_state=42
+)
+
+# Display results sorted by importance
+print("\\nPermutation Feature Importance:")
+for i in result.importances_mean.argsort()[::-1]:
+    print(
+        f"{feature_names[i]}: "
+        f"{result.importances_mean[i]:.4f} "
+        f"± {result.importances_std[i]:.4f}"
+    )`,
+comments:[
+{t:"Understanding the Code — Step by Step",c:`<strong>Line 1–4:</strong> We import the diabetes dataset (a standard sklearn regression dataset with 10 physiological features like age, BMI, blood pressure) along with train_test_split, RandomForestRegressor, and the key permutation_importance function from sklearn.inspection.`},
+{t:"",c:`<strong>Lines 7–9:</strong> We load the data using return_X_y=True which directly gives us the feature matrix X and target vector y. We also extract feature_names for readable output.`},
+{t:"",c:`<strong>Lines 12–13:</strong> A standard 75/25 train-test split. The model trains on X_train and we evaluate importance on X_test — this is important because we want to measure importance on unseen data to avoid bias.`},
+{t:"",c:`<strong>Lines 16–18:</strong> We use a Random Forest (an ensemble of decision trees) — a deliberately non-linear, black-box model. This demonstrates that PFI works even when we can't look inside the model.`},
+{t:"",c:`<strong>Lines 21–22:</strong> The baseline R² score tells us how well the model performs before any permutation. This is our reference point — any drop from this score indicates feature importance.`},
+{t:"",c:`<strong>Lines 25–28:</strong> The core PFI call. <strong>n_repeats=10</strong> means each feature is shuffled 10 times with different random seeds — this gives us both a mean importance and a standard deviation, making the results more reliable than a single shuffle.`},
+{t:"",c:`<strong>Lines 31–34:</strong> We sort features by importance (descending) and print each with its mean ± std. A <strong>positive value</strong> means the feature is important (shuffling hurt performance). A <strong>negative value</strong> (possible with correlated features) means shuffling actually helped — indicating redundancy or noise.`}
+]
+}
+},
+{
+id:4,title:"ICE & PDP Plots",short:"ICE/PDP",
+notes:[
+{h:"Introduction to ICE and PDP",c:`ICE and PDP are essential tools for model interpretability. They visualise how changes in a specific feature affect predictions — ICE at the <strong>individual instance level</strong> and PDP at the <strong>global (average) level</strong>.`},
+{h:"ICE Plots — Local Interpretability",c:`A <strong>local explanation method</strong> showing how changing a specific feature affects the predicted outcome for a <strong>given data point</strong>, keeping other features constant. Each instance gets its own line. E.g., vary land size from 400 to 1,400 m² for each instance, plot each as a separate line.`},
+{h:"PDP — Global Interpretability",c:`Shows the <strong>average predicted value across all instances</strong> as a feature is varied. The orange line overlaid on ICE blue lines. A <strong>global interpretability technique</strong> showing overall feature-target relationship.`},
+{h:"Procedure for ICE",c:`<ol><li>Train a model.</li><li>Select a feature.</li><li>For each instance, vary the feature from min to max and record predictions.</li><li>Plot — one line per instance.</li></ol>`},
+{h:"Procedure for PDP",c:`<ol><li>Train a model.</li><li>Choose a feature.</li><li>For each feature value, compute the <strong>average prediction across all instances</strong> (others constant).</li><li>Plot average predictions vs feature values.</li></ol>`},
+{h:"Interpreting ICE",c:`<ul><li><strong>Instance-Level Insights:</strong> Each line shows individual response to feature changes.</li><li><strong>Heterogeneous Effects:</strong> Different instances affected differently by same feature.</li><li><strong>Feature Interaction Detection:</strong> Non-parallel lines suggest feature depends on other features.</li></ul>`},
+{h:"Interpreting PDP",c:`<ul><li><strong>Positive/Negative Slope:</strong> Correlation direction with target.</li><li><strong>Non-linear Curve:</strong> Complex relationships — plateau, threshold effects.</li><li><strong>2D PDP:</strong> Shows interaction between two features.</li></ul>From the breast cancer example: two clusters with different malignancy response patterns to worst area.`},
+{h:"Strengths and Limitations",c:`<strong>ICE:</strong> Local detail, detects heterogeneous effects, complementary to PDP. Limited by complexity with many points and computational cost.<br><strong>PDP:</strong> Global perspective, simple, model-agnostic. Limited by <em>feature independence assumption</em> (rarely true), only global insights, computationally expensive.`}
+],
+flashcards:[
+{f:"What is the key difference between ICE and PDP?",b:"ICE shows individual instance-level predictions (one line per instance). PDP shows the average prediction across all instances (one line)."},
+{f:"Is ICE a local or global technique?",b:"Local — it explains model behavior for individual data instances."},
+{f:"What does a positive slope in a PDP indicate?",b:"The feature is positively correlated with the predicted target variable."},
+{f:"What is the main assumption of PDP that limits its accuracy?",b:"Feature independence — PDP assumes features are independent of each other, which is rarely true in real-world data."},
+{f:"How can ICE plots detect feature interactions?",b:"If the lines are not parallel — different data points show different responses to the same feature change."},
+{f:"Why can PDP produce misleading plots with correlated features?",b:"Because it creates unrealistic data combinations by varying one feature while holding others constant, even when correlated."}
+],
+quiz:[
+{q:"ICE plots are a global interpretability technique.",type:"tf",a:false},
+{q:"PDP shows the average prediction across all instances for each feature value.",type:"tf",a:true},
+{q:"If ICE lines are not parallel, this suggests:",type:"mc",opts:["Feature independence","No relationship","Feature interactions","Model overfitting"],a:2},
+{q:"PDP assumes features are independent of each other.",type:"tf",a:true},
+{q:"A non-linear PDP curve could indicate:",type:"mc",opts:["Only a linear relationship","Threshold effects or complex relationships","Feature independence","Model failure"],a:1}
+],
+code:{
+title:"PDP and ICE Plots — Python Implementation",
+description:"This implementation uses the California Housing dataset with a Gradient Boosting Regressor to demonstrate four types of plots: PDP only, ICE only, combined PDP+ICE, and a 2D interaction PDP. The Gradient Boosting model is deliberately chosen because it produces non-linear effects that are clearly visible in the plots.",
+code:`import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.datasets import fetch_california_housing
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.inspection import PartialDependenceDisplay
+
+# 1. Load Dataset
+data = fetch_california_housing(as_frame=True)
+X, y = data.data, data.target
+
+# Use a subset of features for simplicity
+features = ['MedInc', 'AveOccup']
+X = X[features]
+
+# 2. Train/Test Split
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# 3. Train Model (Gradient Boosting for non-linear effects)
+model = GradientBoostingRegressor(
+    n_estimators=100, max_depth=4, random_state=42
+)
+model.fit(X_train, y_train)
+
+# 4. Partial Dependence Plot (PDP)
+fig, ax = plt.subplots(figsize=(10, 6))
+PartialDependenceDisplay.from_estimator(
+    model, X_train, ['MedInc'], ax=ax
+)
+plt.title("Partial Dependence Plot (Median Income)")
+plt.show()
+
+# 5. ICE Plot
+fig, ax = plt.subplots(figsize=(10, 6))
+PartialDependenceDisplay.from_estimator(
+    model, X_train, ['MedInc'],
+    kind='individual', ax=ax
+)
+plt.title("ICE Plot (Median Income)")
+plt.show()
+
+# 6. Combined PDP + ICE
+fig, ax = plt.subplots(figsize=(10, 6))
+PartialDependenceDisplay.from_estimator(
+    model, X_train, ['MedInc'],
+    kind='both', ax=ax
+)
+plt.title("PDP + ICE (Median Income)")
+plt.show()
+
+# 7. Two-way PDP (Feature Interaction)
+fig, ax = plt.subplots(figsize=(10, 6))
+PartialDependenceDisplay.from_estimator(
+    model, X_train,
+    [('MedInc', 'AveOccup')], ax=ax
+)
+plt.title("2D PDP (MedInc vs AveOccup)")
+plt.show()`,
+comments:[
+{t:"Understanding the Code — Step by Step",c:`<strong>Lines 1–5:</strong> We import numpy, matplotlib for plotting, the California Housing dataset (predicting house prices from features like median income, house age, occupancy), train_test_split, GradientBoostingRegressor, and the key PartialDependenceDisplay class from sklearn.inspection.`},
+{t:"",c:`<strong>Lines 8–11:</strong> We load the dataset with as_frame=True for a pandas DataFrame, then select only two features: <strong>MedInc</strong> (median income in the block group) and <strong>AveOccup</strong> (average household occupancy). Using fewer features keeps the visualisations clean and interpretable.`},
+{t:"",c:`<strong>Lines 14–16:</strong> Standard 80/20 train-test split. We use X_train (not X_test) for the PDP/ICE plots — this is the standard approach because we want to show the model's learned behaviour, which is best represented by the training distribution.`},
+{t:"",c:`<strong>Lines 19–22:</strong> We deliberately choose <strong>Gradient Boosting</strong> (not a linear model) because it captures non-linear relationships between features and target. With max_depth=4, the trees can model complex curves that will be clearly visible in the plots. This demonstrates that PDP/ICE work with black-box models.`},
+{t:"",c:`<strong>Lines 25–29 (PDP):</strong> The simplest form — kind defaults to 'average'. This produces a single line showing the average predicted house price for each value of MedInc. You'll see the overall upward trend (higher income → higher price) with possible non-linearities.`},
+{t:"",c:`<strong>Lines 32–37 (ICE):</strong> Setting kind='individual' produces one line per training instance. You'll see many thin lines — each showing how that particular neighbourhood's predicted price responds to changes in median income. The spread of these lines reveals heterogeneous effects.`},
+{t:"",c:`<strong>Lines 40–45 (Combined):</strong> kind='both' overlays both: individual ICE lines (thin) and the average PDP line (thick, usually orange). This is the most informative single view — you can see both the overall trend and individual variation simultaneously. Non-parallel lines indicate feature interactions.`},
+{t:"",c:`<strong>Lines 48–53 (2D PDP):</strong> Passing a tuple ('MedInc', 'AveOccup') creates a contour/heatmap plot showing how the predicted price changes when <strong>both features vary simultaneously</strong>. This reveals interaction effects — e.g., does high income matter more when occupancy is low? The contour lines show iso-price levels.`}
+]
+}
+},
+{
+id:5,title:"SHAP",short:"SHAP",
+notes:[
+{h:"Introduction to SHAP",c:`SHAP (Shapley Additive Explanations) is <strong>both local and global, model-agnostic</strong>. Based on <strong>Shapley values</strong> from cooperative game theory. The "game" = ML model, "players" = features, "payout" = prediction gain (predicted − average).`},
+{h:"Calculating Shapley Values",c:`<ol><li><strong>Baseline:</strong> Mean of all predictions.</li><li><strong>Form coalitions:</strong> All subsets without the target feature. E.g., with A,B,C: {}, {b₁}, {c₁}, {b₁,c₁}.</li><li><strong>Marginal contribution:</strong><div class="formula">MC(a₁, S) = f(S ∪ a₁) − f(S)</div></li><li><strong>Weighted average:</strong><div class="formula">SV(a₁) = Σ [ |S<sub>k</sub>|!(N−|S<sub>k</sub>|−1)! / N! ] × MC(a₁, S<sub>k</sub>)</div></li></ol>`},
+{h:"Computational Challenge",c:`2<sup>N</sup> subsets for N features. Approximated via <strong>Monte Carlo sampling</strong>.`},
+{h:"Properties",c:`<ol><li><strong>Efficiency:</strong> Sum of SVs = predicted − average.</li><li><strong>Symmetry:</strong> Equal contributions → equal SVs.</li><li><strong>Dummy:</strong> No-change feature → SV = 0.</li><li><strong>Additivity:</strong> Ensemble SVs = average of sub-model SVs.</li></ol>`},
+{h:"SHAP Plot Types",c:`<ul><li><strong>Feature Importance:</strong> Mean |SHAP| per feature, sorted bar chart.</li><li><strong>Summary Plot:</strong> All features × all instances. Color = value (red=high, blue=low). Position = SHAP impact.</li><li><strong>Dependence Plot:</strong> Feature value vs SHAP value, colored by interaction feature.</li><li><strong>Force Plot:</strong> Single instance — baseline + per-feature push up/down.</li></ul>`}
+],
+flashcards:[
+{f:"What is the 'game', 'players', and 'payout' in SHAP?",b:"Game = ML model, Players = features, Payout = predicted value − average prediction."},
+{f:"What is the Efficiency property?",b:"Sum of all Shapley values = predicted value − average prediction."},
+{f:"Why is exact computation impractical?",b:"2^N possible feature subsets — exponential growth."},
+{f:"What approximation method is commonly used?",b:"Monte Carlo sampling — samples subsets instead of computing all."},
+{f:"What does a SHAP Summary Plot show?",b:"Each dot = one instance. Color = feature value (red=high, blue=low). Position = SHAP value impact on prediction."},
+{f:"What does the Dummy property state?",b:"A feature that never changes the prediction has a Shapley value of 0."}
+],
+quiz:[
+{q:"SHAP is based on cooperative game theory.",type:"tf",a:true},
+{q:"SHAP can only provide local explanations.",type:"tf",a:false},
+{q:"The number of possible feature subsets for N features is:",type:"mc",opts:["N","N²","2^N","N!"],a:2},
+{q:"The Efficiency property means Shapley values sum to:",type:"mc",opts:["Zero","The predicted value","Predicted value minus average value","One"],a:2},
+{q:"In a SHAP summary plot, red dots represent:",type:"mc",opts:["Low feature values","High feature values","Negative SHAP values","Missing values"],a:1}
+]
+},
+{
+id:6,title:"LIME",short:"LIME",
+notes:[
+{h:"Introduction to LIME",c:`Local Interpretable Model-Agnostic Explanations. Explains individual predictions by <strong>approximating the black-box with a local surrogate model</strong>. Model-agnostic and local. Enhances trust by showing reasons for predictions.`},
+{h:"Local Fidelity",c:`Explanation must correspond to model behavior <strong>in the neighborhood</strong> of the instance. Surrogate only needs to be accurate locally, not globally.`},
+{h:"Fidelity-Interpretability Tradeoff",c:`<strong>Higher fidelity → less interpretable</strong>. Formulated as:<div class="formula">Explanation(x) = argmin<sub>g ∈ G</sub> [ L(f, g, π<sub>x</sub>) + Ω(g) ]</div>L = loss, Ω(g) = complexity measure.`},
+{h:"Steps of LIME",c:`<ol><li>Train black-box model f.</li><li>Select features for surrogate (e.g., via Lasso).</li><li>Create <strong>perturbed samples</strong>: disable features, map back to domain, get f(xᵢ), calculate similarity π(z,zᵢ).</li><li>Fit interpretable model minimising:<div class="formula">L = Σ π(z, zᵢ) × (f(xᵢ) − g(zᵢ))²</div></li><li>Generate explanation from surrogate's feature importance.</li></ol>`},
+{h:"LIME for Different Data Types",c:`<ul><li><strong>Tabular:</strong> Sample from feature distributions; similarity measure critical.</li><li><strong>Text:</strong> Bag-of-words; perturb by removing words (1→0).</li><li><strong>Image:</strong> Divide into <strong>superpixels</strong>; binary on/off features; greyed-out regions.</li></ul>`}
+],
+flashcards:[
+{f:"What is a surrogate model in LIME?",b:"An intrinsically interpretable model (e.g., linear or decision tree) that approximates the black-box model locally."},
+{f:"What is 'local fidelity'?",b:"The explanation must match model behavior in the neighborhood of the instance, not globally."},
+{f:"What is the fidelity-interpretability tradeoff?",b:"Higher fidelity (surrogate matches black-box better) makes it less interpretable (more complex)."},
+{f:"How does LIME handle text data?",b:"Bag-of-words; perturbations by removing words (changing 1 to 0)."},
+{f:"How does LIME handle image data?",b:"Divide into superpixels (contiguous same-color regions); binary on/off features."},
+{f:"What role does the similarity measure play?",b:"Weights perturbed samples — closer samples get higher weight in training the surrogate."}
+],
+quiz:[
+{q:"LIME is a global explanation technique.",type:"tf",a:false},
+{q:"The surrogate model must match the black-box globally.",type:"tf",a:false},
+{q:"For text data, LIME uses which representation?",type:"mc",opts:["Word embeddings","Bag-of-words","TF-IDF","Character n-grams"],a:1},
+{q:"In LIME for images, what is a 'superpixel'?",type:"mc",opts:["A single pixel","A contiguous region of same color","The entire image","A random patch"],a:1},
+{q:"LIME can only be used with tabular data.",type:"tf",a:false}
+]
+},
+{
+id:7,title:"Class Activation Mapping",short:"CAM",
+notes:[
+{h:"Introduction to CAM",c:`A <strong>model-specific, local</strong> technique for CNNs. Generates a <strong>heatmap</strong> highlighting spatial regions the CNN focuses on. Increases transparency and trustworthiness of computer vision models.`},
+{h:"Use Cases",c:`<strong>Medical imaging</strong> — explain disease predictions. <strong>Autonomous driving</strong> — show visual cues for decisions. <strong>General AI transparency</strong> in healthcare and security.`},
+{h:"How It Works",c:`<ol><li>Feed image into trained CNN.</li><li>Get <strong>feature maps</strong> from last convolutional layer.</li><li>Get <strong>class-specific weights</strong> from fully connected layer.</li><li>Compute <strong>weighted sum</strong> of feature maps → heatmap.</li><li>Scale heatmap to image size; overlay on original.</li></ol>Jet color scheme: warmer = higher relevance.`},
+{h:"Architecture Requirement",c:`<div class="formula">Last Conv Layer → Global Average Pooling (GAP) → Fully Connected (Dense) Layer</div>GAP is essential — produces one scalar per feature map for weighted combination.`},
+{h:"Interpreting Output",c:`Cat example: ears, eyes, stomach outline highlighted. Misclassified dog-as-cat (60% accuracy): similar highlighted regions for both classes → model hadn't learnt to distinguish them.`}
+],
+flashcards:[
+{f:"What type of models does CAM work with?",b:"CNNs only — it is model-specific."},
+{f:"What does a CAM heatmap show?",b:"Spatial regions of an image the CNN focuses on — warmer colors = higher relevance."},
+{f:"What architecture does CAM require?",b:"Last Conv Layer → Global Average Pooling → Fully Connected Layer."},
+{f:"What do class-specific weights represent?",b:"How much each feature map from the last conv layer influences a particular class."},
+{f:"What color scheme does CAM use?",b:"Jet — warmer (red/yellow) = higher relevance, cooler (blue) = lower."},
+{f:"Name two use cases for CAM",b:"Medical imaging (explaining disease predictions) and autonomous driving (showing visual cues for decisions)."}
+],
+quiz:[
+{q:"CAM is a model-agnostic technique.",type:"tf",a:false},
+{q:"CAM requires a Global Average Pooling layer.",type:"tf",a:true},
+{q:"In CAM, warmer heatmap colors indicate:",type:"mc",opts:["Lower relevance","Higher relevance","Uncertainty","Error regions"],a:1},
+{q:"CAM can explain Random Forest classifiers.",type:"tf",a:false},
+{q:"The weighted sum uses weights from which layer?",type:"mc",opts:["First conv layer","Last conv layer","GAP layer","Fully connected layer"],a:3}
+]
+},
+{
+id:8,title:"Anchors",short:"Anchors",
+notes:[
+{h:"Introduction to Anchors",c:`A <strong>local, model-agnostic</strong> technique generating <strong>if-then rules</strong> to explain predictions. Identifies feature values that, when fixed, <strong>guarantee the same prediction</strong> within similar inputs. Output is text-based.`},
+{h:"How Anchors Work",c:`Fix feature values, vary others. If model still predicts correctly with high precision → those features form an anchor. Compare candidates; prefer shorter rules with equal precision.`},
+{h:"Detailed Example",c:`"The show is not good" → negative. Anchor "not, good". Vary other words → "it was not a good performance" → still negative. Higher precision confirms anchor. Other candidates: "is, not", "was, a, good" — compared for best precision/length.`},
+{h:"Precision and Coverage",c:`<strong>Precision:</strong> Proportion of perturbed instances matching anchor that model predicts correctly. <strong>Coverage:</strong> Proportion of instances the rule applies to. Prefer higher coverage at equal precision; prefer shorter rule at equal precision and coverage.`}
+],
+flashcards:[
+{f:"What form of explanation do Anchors produce?",b:"If-then rules — text-based sufficient conditions for a prediction."},
+{f:"What does 'precision' mean for an Anchor?",b:"Proportion of perturbed instances matching the anchor that the model predicts correctly."},
+{f:"What does 'coverage' mean?",b:"Proportion of instances in the dataset to which the rule applies."},
+{f:"Between two anchors with equal precision, which is preferred?",b:"The one with higher coverage, or if equal, the shorter rule."},
+{f:"Are Anchors local or global?",b:"Local — they explain a single instance's prediction."}
+],
+quiz:[
+{q:"Anchors produce numerical feature importance scores.",type:"tf",a:false},
+{q:"Higher precision means:",type:"mc",opts:["Rule applies to more instances","Rule is shorter","More perturbed instances predicted correctly","Model is more accurate"],a:2},
+{q:"Anchors can be considered a global method.",type:"tf",a:false},
+{q:"Between equal-precision anchors with different coverage:",type:"mc",opts:["Pick longer","Pick lower coverage","Pick higher coverage","Either is fine"],a:2},
+{q:"Anchors provide 'sufficient condition' explanations.",type:"tf",a:true}
+]
+},
+{
+id:9,title:"Counterfactual Explanations",short:"Counterfactual",
+notes:[
+{h:"Introduction",c:`Provides <strong>alternative scenarios</strong> by altering input features to produce a different outcome. Answers <strong>"what if" questions</strong>. Counterfactual should be <strong>as close as possible</strong> to the original (minimal change).`},
+{h:"Generation Steps",c:`<ol><li>Start with original instance + prediction.</li><li>Decide desired different outcome.</li><li>Adjust features to achieve it.</li><li>Verify the modification produces desired prediction.</li></ol>`},
+{h:"Approaches",c:`<ol><li><strong>Brute Force:</strong> Test different combinations.</li><li><strong>Gradient-based:</strong> Adjust inputs via gradients (differentiable models).</li><li><strong>Evolutionary:</strong> Genetic algorithms.</li><li><strong>Optimization-based:</strong> Minimal change as optimisation objective.</li></ol>`},
+{h:"Examples",c:`<strong>Credit:</strong> Score 650 → denied. CF: Score 700 → approved. <strong>Medical:</strong> High diabetes risk. CF: BMI lower by 5 → lower risk. <strong>Hiring:</strong> Rejected. CF: +2 years experience → considered.`},
+{h:"Desirable Properties",c:`<ol><li><strong>Sparsity:</strong> Few features modified.</li><li><strong>Realism:</strong> Plausible changes (no impossible ones like changing age).</li><li><strong>Actionability:</strong> Actionable insights (increase salary, take a course).</li><li><strong>Diversity:</strong> Multiple paths to different outcome.</li><li><strong>Causal Validity:</strong> Respect causal relationships.</li></ol>`},
+{h:"Challenges",c:`<ul><li><strong>Computational cost</strong> — expensive for large models.</li><li><strong>Multiple solutions</strong> — ambiguity.</li><li><strong>Unrealistic recommendations</strong> — immutable features.</li><li><strong>Non-causal models</strong> — may not reflect true paths.</li></ul>`}
+],
+flashcards:[
+{f:"What question do counterfactuals answer?",b:"'What if' questions — showing how to modify inputs to produce a different outcome."},
+{f:"What does 'sparsity' mean?",b:"Only a small number of features should be modified — simple and actionable."},
+{f:"Why suggest 'increase salary' but not 'decrease age'?",b:"Age is immutable (not actionable/realistic), salary increase is plausible and actionable."},
+{f:"Name four approaches to generating counterfactuals",b:"Brute Force, Gradient-based, Evolutionary Algorithms, Optimization-based."},
+{f:"Why less effective with non-causal models?",b:"Without causal relationships, suggested changes might not actually cause the different prediction."},
+{f:"What does 'causal validity' require?",b:"Changes must respect causal relationships — e.g., increasing salary should not decrease age."}
+],
+quiz:[
+{q:"Counterfactuals show 'what if' scenarios.",type:"tf",a:true},
+{q:"A good counterfactual should modify as many features as possible.",type:"tf",a:false},
+{q:"Which is NOT a desirable property?",type:"mc",opts:["Sparsity","Realism","Maximality","Actionability"],a:2},
+{q:"Gradient-based methods work well with:",type:"mc",opts:["Any model","Only decision trees","Differentiable models","Only linear models"],a:2},
+{q:"A major challenge is that multiple solutions may exist.",type:"tf",a:true}
+]
+}
+];
+
+const finalExam={title:"XAI Assessment — Final Exam",parts:[
+{name:"Part 1: Evaluation and Methods",questions:[
+{q:"What are the two main disadvantages of CAM compared to perturbation-based methods like LIME for image classification?",a:"1) <strong>CAM is model-specific</strong> — only works with CNNs that have a GAP layer architecture, whereas LIME is model-agnostic. 2) <strong>Limited diagnostic capability for misclassifications</strong> — CAM provides a single heatmap without easily quantifying which features pushed toward a wrong class."},
+{q:'"SHAP is always better than LIME because it has stronger mathematical foundations." Critically evaluate this statement.',a:"<strong>Partially true but oversimplified.</strong> SHAP has stronger mathematical foundations with axiomatic guarantees. However: (1) computationally expensive, (2) KernelSHAP also assumes feature independence, (3) LIME can be faster and more practical in production, (4) the choice depends on the trade-off between rigor, cost, and interpretability needs."},
+{q:"Can Anchors be considered a global explanation method if you generate anchors for many individual instances? Why or why not?",a:"<strong>No.</strong> Each anchor still explains only a single prediction locally. Aggregating many local anchors doesn't guarantee coverage of all decision regions, can produce conflicting rules, and cannot reliably replicate the unified global picture that PDP or SHAP summary plots provide."},
+{q:'"PDP and ICE assume feature independence; SHAP (KernelSHAP) assumes feature independence; LIME does not explicitly assume it but uses a weighted local sample that can suffer similarly." Discuss.',a:"<strong>Largely accurate.</strong> PDP/ICE explicitly assume independence when varying one feature. KernelSHAP's sampling can implicitly assume it. LIME has no explicit assumption but its perturbations create unrealistic combinations in correlated spaces. Feature correlation is a fundamental challenge for most XAI methods."},
+{q:"Why does LIME's linear surrogate model sometimes fail to approximate a highly non-linear decision boundary locally? Give a 1D example.",a:"LIME assumes approximately linear local behavior. <strong>1D Example:</strong> A sine wave decision boundary. Near peaks/troughs it appears linear. Near zero-crossings where the curve changes direction sharply, a linear fit misrepresents which side of the boundary nearby points fall on — leading to incorrect feature importance."}
+]},
+{name:"Part 2: Feature Importance and Limitations",questions:[
+{q:"Contrast Permutation Feature Importance with SHAP global feature importance. What additional information does SHAP provide?",a:"PFI provides a single importance score (magnitude). SHAP additionally provides: (1) <strong>Direction of influence</strong> — whether a feature pushes up or down; (2) <strong>Feature value interaction</strong> — how high vs low values affect predictions differently; (3) <strong>Individual instance decomposition</strong>; (4) <strong>Interaction effects</strong> via dependence plots."},
+{q:"Compare Counterfactual Explanations with Anchors. One is a 'sufficient condition'; the other is a 'minimal change' explanation. Explain.",a:"<strong>Anchors</strong> = sufficient condition: what's true about the current instance that guarantees its prediction. <strong>Counterfactuals</strong> = minimal change: what needs to change to get a different prediction. Anchors validate the current decision; counterfactuals suggest how to alter it."},
+{q:"Identify two major weaknesses of PFI when features are highly correlated.",a:"1) <strong>Underestimation:</strong> Permuting one correlated feature may not reduce performance because the other still provides the same information — both appear unimportant despite being jointly important. 2) <strong>Instability:</strong> Importance scores vary depending on shuffle order — non-reproducible rankings."},
+{q:"Why can PDP produce misleading plots when features are not independent? Give a concrete example.",a:"PDP creates unrealistic combinations. <strong>Example:</strong> 'Bedrooms' and 'square footage' are correlated. PDP might evaluate '2 bedrooms with 5,000 sq ft' — a combination that never exists. The model produces nonsensical predictions for these points, distorting the curve."},
+{q:"State three limitations of LIME. Which is most critical in production?",a:"(1) <strong>Instability</strong> — different runs give different explanations. (2) Fidelity-interpretability tradeoff. (3) Feature correlation issues. Most critical: <strong>instability</strong> — inconsistent explanations undermine trust, prevent reliable debugging, and create compliance risks."},
+{q:"SHAP is computationally expensive. Name two approximation methods and their target model types.",a:"1) <strong>TreeSHAP</strong> — tree-based models (RF, XGBoost, LightGBM). Exploits tree structure for polynomial-time exact computation. 2) <strong>DeepSHAP</strong> — deep learning models. Combines DeepLIFT backpropagation with Shapley computation. 3) <strong>KernelSHAP</strong> (bonus) — model-agnostic but slowest."}
+]},
+{name:"Part 3: Comparisons and Applications",questions:[
+{q:"Compare LIME and SHAP: (a) Mathematical foundation, (b) Stability, (c) Computational cost.",a:"(a) SHAP has axiomatic guarantees (efficiency, symmetry, dummy, additivity). LIME has no theoretical guarantees. (b) SHAP is more stable due to theoretical properties. LIME is notably unstable from random perturbation. (c) LIME is faster — one local linear fit. SHAP is more expensive — exponential exact or polynomial approximation."},
+{q:"Explain global vs local explanation. When would you choose each?",a:"<strong>Global</strong> (PDP) = overall behavior across dataset. <strong>Local</strong> (ICE) = specific instance. Choose global for: regulators, overall feature importance, documentation. Choose local for: explaining individual decisions, debugging specific predictions, healthcare/finance where individual decisions matter."},
+{q:"How do Anchors differ from LIME in explanation type? Which is more intuitive for non-technical stakeholders?",a:"LIME = numerical feature weights. Anchors = if-then rules. <strong>Anchors are more intuitive</strong> because: (1) if-then rules resemble human reasoning, (2) no numerical literacy needed, (3) reads as clear logical statement, (4) precision metric is easy to grasp."}
+]}
+]};
+
+let currentModule=0,currentTab='notes',flippedCards=new Set(),quizAnswers={},quizSubmitted={},completedModules=new Set(),examAnswers={},timerSeconds=0,showExam=false;
+setInterval(()=>{timerSeconds++;const h=String(Math.floor(timerSeconds/3600)).padStart(2,'0'),m=String(Math.floor((timerSeconds%3600)/60)).padStart(2,'0'),s=String(timerSeconds%60).padStart(2,'0');document.getElementById('studyTimer').textContent=`${h}:${m}:${s}`;},1000);
+function toast(msg){const t=document.getElementById('toast');document.getElementById('toastMsg').textContent=msg;t.classList.remove('translate-y-20','opacity-0');t.classList.add('translate-y-0','opacity-100');setTimeout(()=>{t.classList.add('translate-y-20','opacity-0');t.classList.remove('translate-y-0','opacity-100')},2500);}
+
+function renderSidebar(){const c=document.getElementById('sidebarModules');let html=`<button onclick="showModuleView()" class="module-btn ${!showExam&&currentModule===-1?'active':''} flex-shrink-0 w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg border border-white/[0.05] text-xs text-white/60 hover:text-white/90 hover:bg-white/[0.02] transition-all"><div class="w-5 h-5 rounded border border-white/10 flex items-center justify-center text-[10px]"><i data-lucide="layout-dashboard" class="w-3 h-3"></i></div><span>Overview</span></button>`;M.forEach((m,i)=>{const hasCode=!!m.code;html+=`<button onclick="selectModule(${i})" class="module-btn ${!showExam&&currentModule===i?'active':''} ${completedModules.has(i)?'completed':''} flex-shrink-0 w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg border border-white/[0.05] text-xs text-white/60 hover:text-white/90 hover:bg-white/[0.02] transition-all"><div class="w-5 h-5 rounded border border-white/10 flex items-center justify-center"><div class="cdot w-1.5 h-1.5 rounded-full bg-white/20 transition-all"></div></div><span class="truncate">${m.id}. ${m.short}</span>${hasCode?'<span class="ml-auto text-[9px] text-[#c6f91f]/50 flex-shrink-0">CODE</span>':''}</button>`;});c.innerHTML=html;lucide.createIcons();}
+function showModuleView(){showExam=false;currentModule=-1;renderSidebar();renderOverview();}
+function showFinalExam(){showExam=true;renderSidebar();renderExam();}
+function selectModule(i){showExam=false;currentModule=i;currentTab='notes';renderSidebar();renderModule();}
+
+function renderOverview(){const mc=document.getElementById('mainContent');let html=`<div class="anim-reveal"><div class="mb-8"><h1 class="font-geist text-2xl sm:text-3xl font-light tracking-tight mb-2">Explainable AI</h1><p class="text-sm text-white/50">9 Modules · Notes · Flashcards · Quizzes · Code · Final Exam</p></div><div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10"><div class="border border-white/[0.05] rounded-lg p-5 bg-white/[0.01]"><div class="text-[10px] uppercase tracking-widest text-white/40 mb-2">Modules</div><div class="text-3xl font-light tracking-tight">${completedModules.size}<span class="text-white/30 text-lg">/9</span></div><div class="w-full h-1 bg-white/[0.05] rounded-full mt-3 overflow-hidden"><div class="h-full bg-[#c6f91f] rounded-full transition-all" style="width:${(completedModules.size/9*100)}%"></div></div></div><div class="border border-white/[0.05] rounded-lg p-5 bg-white/[0.01]"><div class="text-[10px] uppercase tracking-widest text-white/40 mb-2">Quiz Score</div><div class="text-3xl font-light tracking-tight" id="overviewQuizScore">—</div><div class="text-xs text-white/30 mt-1">${Object.keys(quizSubmitted).length} of 9 completed</div></div><div class="border border-white/[0.05] rounded-lg p-5 bg-white/[0.01]"><div class="text-[10px] uppercase tracking-widest text-white/40 mb-2">Flashcards</div><div class="text-3xl font-light tracking-tight">${flippedCards.size}</div><div class="text-xs text-white/30 mt-1">cards flipped</div></div></div><h2 class="text-xs font-medium uppercase tracking-widest text-white/40 mb-4">All Modules</h2><div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">`;M.forEach((m,i)=>{html+=`<button onclick="selectModule(${i})" class="group text-left border border-white/[0.05] rounded-lg p-5 bg-white/[0.01] hover:bg-white/[0.02] transition-all"><div class="flex items-center justify-between mb-3"><span class="text-[10px] uppercase tracking-widest text-[#c6f91f]/70">Module ${m.id}</span>${completedModules.has(i)?'<i data-lucide="check-circle" class="w-4 h-4 text-[#c6f91f]"></i>':'<i data-lucide="circle" class="w-4 h-4 text-white/15"></i>'}</div><h3 class="text-sm font-medium mb-1 group-hover:text-[#c6f91f] transition-colors">${m.title}</h3><div class="flex gap-3 text-[10px] text-white/30 mt-2"><span>${m.notes.length} notes</span><span>${m.flashcards.length} cards</span><span>${m.quiz.length} quiz</span>${m.code?'<span class="text-[#c6f91f]/50">code</span>':''}</div></button>`;});html+=`</div><div class="mt-10 text-center"><button onclick="showFinalExam()" class="inline-flex items-center gap-2 px-6 py-3 bg-[#c6f91f] text-black text-xs font-semibold uppercase tracking-widest rounded-sm hover:bg-[#d4ff4a] transition-colors glow-pulse"><i data-lucide="file-text" class="w-4 h-4"></i> Take Final Exam</button></div></div>`;mc.innerHTML=html;lucide.createIcons();updateOverviewScore();}
+function updateOverviewScore(){const el=document.getElementById('overviewQuizScore');if(!el)return;let total=0,correct=0;M.forEach((_,i)=>{if(quizSubmitted[i]){M[i].quiz.forEach((__,j)=>{total++;if(quizAnswers[i+'_'+j]===__.a)correct++;});}});el.textContent=total>0?`${correct}/${total}`:'—';}
+
+function renderModule(){const m=M[currentModule],mc=document.getElementById('mainContent');let tabs=`<button onclick="switchTab('notes')" class="tab-btn ${currentTab==='notes'?'active':''} px-4 py-2.5 text-xs font-medium border-b-2 border-transparent text-white/50 hover:text-white/80 transition-all"><span class="flex items-center gap-1.5"><i data-lucide="book-open" class="w-3.5 h-3.5"></i> Notes</span></button><button onclick="switchTab('flashcards')" class="tab-btn ${currentTab==='flashcards'?'active':''} px-4 py-2.5 text-xs font-medium border-b-2 border-transparent text-white/50 hover:text-white/80 transition-all"><span class="flex items-center gap-1.5"><i data-lucide="layers" class="w-3.5 h-3.5"></i> Flashcards</span></button><button onclick="switchTab('quiz')" class="tab-btn ${currentTab==='quiz'?'active':''} px-4 py-2.5 text-xs font-medium border-b-2 border-transparent text-white/50 hover:text-white/80 transition-all"><span class="flex items-center gap-1.5"><i data-lucide="check-square" class="w-3.5 h-3.5"></i> Quiz</span></button>`;if(m.code){tabs+=`<button onclick="switchTab('code')" class="tab-btn ${currentTab==='code'?'active':''} px-4 py-2.5 text-xs font-medium border-b-2 border-transparent text-white/50 hover:text-white/80 transition-all"><span class="flex items-center gap-1.5"><i data-lucide="code-2" class="w-3.5 h-3.5"></i> Code</span></button>`;}
+let html=`<div class="anim-reveal"><div class="flex items-center gap-3 mb-2"><span class="text-[10px] uppercase tracking-widest text-[#c6f91f]/70">Module ${m.id}</span></div><h1 class="font-geist text-xl sm:text-2xl font-light tracking-tight mb-6">${m.title}</h1><div class="flex gap-1 border-b border-white/[0.05] mb-8 overflow-x-auto">${tabs}</div><div id="tabContent"></div></div>`;mc.innerHTML=html;lucide.createIcons();renderTab();}
+function switchTab(t){currentTab=t;renderModule();}
+function renderTab(){const tc=document.getElementById('tabContent');if(currentTab==='notes')renderNotes(tc);else if(currentTab==='flashcards')renderFlashcards(tc);else if(currentTab==='quiz')renderQuiz(tc);else if(currentTab==='code')renderCode(tc);}
+
+function renderNotes(tc){const m=M[currentModule];let html='';m.notes.forEach(n=>{html+=`<div class="note-section anim-reveal"><h3>${n.h}</h3><div>${n.c}</div></div>`;});tc.innerHTML=html;}
+
+function renderFlashcards(tc){const m=M[currentModule];let html=`<div class="mb-4 flex items-center justify-between"><p class="text-xs text-white/40">Click a card to flip · ${m.flashcards.length} cards</p><button onclick="resetCards()" class="text-[10px] uppercase tracking-widest text-white/30 hover:text-white/60 transition-colors">Reset All</button></div><div class="grid grid-cols-1 sm:grid-cols-2 gap-4">`;m.flashcards.forEach((c,i)=>{const key=currentModule+'_'+i,flipped=flippedCards.has(key);html+=`<div class="flashcard ${flipped?'flipped':''} cursor-pointer h-48 sm:h-56" onclick="flipCard('${key}',this)"><div class="flashcard-inner w-full h-full"><div class="flashcard-front border border-white/[0.05] rounded-lg bg-[#15191E] p-5 flex flex-col justify-center"><div class="text-[10px] uppercase tracking-widest text-[#c6f91f]/50 mb-3">Question</div><p class="text-sm text-white/80 leading-relaxed">${c.f}</p><div class="mt-4 text-[10px] text-white/20">Click to reveal</div></div><div class="flashcard-back border border-[#c6f91f]/20 rounded-lg bg-[#c6f91f]/[0.03] p-5 flex flex-col justify-center"><div class="text-[10px] uppercase tracking-widest text-[#c6f91f]/70 mb-3">Answer</div><p class="text-sm text-white/80 leading-relaxed">${c.b}</p><div class="mt-4 text-[10px] text-white/20">Click to flip back</div></div></div></div>`;});html+=`</div>`;tc.innerHTML=html;}
+function flipCard(key,el){if(flippedCards.has(key)){flippedCards.delete(key);el.classList.remove('flipped');}else{flippedCards.add(key);el.classList.add('flipped');}document.getElementById('cardsFlipped').textContent=flippedCards.size;}
+function resetCards(){M[currentModule].flashcards.forEach((_,i)=>flippedCards.delete(currentModule+'_'+i));document.getElementById('cardsFlipped').textContent=flippedCards.size;renderFlashcards(document.getElementById('tabContent'));}
+
+function renderQuiz(tc){const m=M[currentModule],submitted=quizSubmitted[currentModule];let html=`<div class="space-y-6">`;m.quiz.forEach((q,i)=>{const key=currentModule+'_'+i,selected=quizAnswers[key];let cc='';if(submitted){if(selected===q.a)cc='correct';else if(selected!==undefined&&selected!==q.a)cc='incorrect';}html+=`<div class="border border-white/[0.05] rounded-lg p-5 bg-white/[0.01]"><div class="flex items-start gap-3 mb-4"><span class="text-[10px] text-white/30 mt-0.5">${i+1}.</span><p class="text-sm text-white/80 leading-relaxed">${q.q}</p></div>`;if(q.type==='tf'){html+=`<div class="flex gap-3 ml-6"><button onclick="selectQuizOption('${key}',true,${currentModule})" class="quiz-option px-4 py-2 border border-white/[0.05] rounded text-xs text-white/60 hover:text-white/90 transition-all ${selected===true?(cc||'selected'):''} ${submitted&&q.a===true?'correct':''}" ${submitted?'disabled':''}>True</button><button onclick="selectQuizOption('${key}',false,${currentModule})" class="quiz-option px-4 py-2 border border-white/[0.05] rounded text-xs text-white/60 hover:text-white/90 transition-all ${selected===false?(cc||'selected'):''} ${submitted&&q.a===false?'correct':''}" ${submitted?'disabled':''}>False</button></div>`;}else{html+=`<div class="space-y-2 ml-6">`;q.opts.forEach((o,j)=>{html+=`<button onclick="selectQuizOption('${key}',${j},${currentModule})" class="quiz-option w-full text-left px-4 py-2.5 border border-white/[0.05] rounded text-xs text-white/60 hover:text-white/90 transition-all ${selected===j?(cc||'selected'):''} ${submitted&&q.a===j?'correct':''}" ${submitted?'disabled':''}>${String.fromCharCode(65+j)}. ${o}</button>`;});html+=`</div>`;}if(submitted){const ok=selected===q.a;html+=`<div class="ml-6 mt-3 flex items-center gap-2 text-xs ${ok?'text-green-400':'text-red-400'}"><i data-lucide="${ok?'check':'x'}" class="w-3.5 h-3.5"></i><span>${ok?'Correct!':'Incorrect — review the notes for the correct answer.'}</span></div>`;}html+=`</div>`;});html+=`</div>`;if(!submitted){html+=`<div class="mt-6"><button onclick="submitQuiz(${currentModule})" class="px-6 py-3 bg-[#c6f91f] text-black text-xs font-semibold uppercase tracking-widest rounded-sm hover:bg-[#d4ff4a] transition-colors">Submit Quiz</button></div>`;}else{let cor=0;m.quiz.forEach((q,i)=>{if(quizAnswers[currentModule+'_'+i]===q.a)cor++;});html+=`<div class="mt-6 border border-[#c6f91f]/20 rounded-lg p-5 bg-[#c6f91f]/[0.03]"><div class="text-sm font-medium text-[#c6f91f] mb-1">Score: ${cor}/${m.quiz.length}</div><div class="text-xs text-white/50">${cor===m.quiz.length?'Perfect score! 🎉':cor>=m.quiz.length*0.7?'Good job! Review the ones you missed.':'Keep studying — review the notes and try again.'}</div></div><button onclick="retakeQuiz(${currentModule})" class="mt-4 px-5 py-2.5 border border-white/[0.05] text-xs text-white/50 hover:text-white/80 rounded transition-all">Retake Quiz</button>`;}tc.innerHTML=html;lucide.createIcons();}
+function selectQuizOption(key,val,mod){if(quizSubmitted[mod])return;quizAnswers[key]=val;renderQuiz(document.getElementById('tabContent'));}
+function submitQuiz(mod){const m=M[mod];if(!m.quiz.every((_,i)=>quizAnswers[mod+'_'+i]!==undefined)){toast('Please answer all questions');return;}quizSubmitted[mod]=true;completedModules.add(mod);document.getElementById('quizDone').textContent=Object.keys(quizSubmitted).length+'/9';renderQuiz(document.getElementById('tabContent'));renderSidebar();toast('Quiz submitted!');}
+function retakeQuiz(mod){M[mod].quiz.forEach((_,i)=>delete quizAnswers[mod+'_'+i]);delete quizSubmitted[mod];completedModules.delete(mod);document.getElementById('quizDone').textContent=Object.keys(quizSubmitted).length+'/9';renderQuiz(document.getElementById('tabContent'));renderSidebar();}
+
+function highlightPython(code){
+    return code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/(#[^\n]*)/g,'<span class="cm">$1</span>')
+    .replace(/\b(import|from|as|for|in|if|else|elif|return|def|class|with|try|except|finally|yield|lambda|pass|break|continue|and|or|not|is|None|True|False)\b/g,'<span class="kw">$1</span>')
+    .replace(/('''.*?'''|""".*?"""|'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*")/gs,'<span class="str">$1</span>')
+    .replace(/\b(\d+\.?\d*)\b/g,'<span class="num">$1</span>')
+    .replace(/(\w+)(?=\s*\()/g,'<span class="fn">$1</span>');
+}
+
+function renderCode(tc){const m=M[currentModule],cd=m.code;let html=`<div class="anim-reveal">
+    <div class="mb-6">
+        <h2 class="text-base font-medium mb-2">${cd.title}</h2>
+        <p class="text-sm text-white/50 leading-relaxed">${cd.description}</p>
+    </div>
+    <div class="code-block">
+        <div class="code-header">
+            <span>python</span>
+            <button class="code-copy" id="copyBtn_${currentModule}" onclick="copyCode(${currentModule})">
+                <i data-lucide="copy" class="w-3 h-3"></i> Copy
+            </button>
+        </div>
+        <div class="code-body" id="codeBody_${currentModule}">${highlightPython(cd.code)}</div>
+    </div>
+    <div class="mt-8 mb-4">
+        <h3 class="text-xs font-medium uppercase tracking-widest text-[#c6f91f]/70 mb-4 flex items-center gap-2">
+            <i data-lucide="message-circle" class="w-3.5 h-3.5"></i> Code Walkthrough
+        </h3>
+    </div>`;
+    cd.comments.forEach(c=>{
+        if(c.t){html+=`<div class="code-comment-block"><p><strong>${c.t}</strong></p></div>`;}
+        html+=`<div class="code-comment-block"><p>${c.c}</p></div>`;
+    });
+    html+=`</div>`;tc.innerHTML=html;lucide.createIcons();}
+
+function copyCode(mod){
+    const code=M[mod].code;
+    navigator.clipboard.writeText(code).then(()=>{
+        const btn=document.getElementById('copyBtn_'+mod);
+        btn.classList.add('copied');
+        btn.innerHTML='<i data-lucide="check" class="w-3 h-3"></i> Copied!';
+        lucide.createIcons();
+        toast('Code copied to clipboard!');
+        setTimeout(()=>{
+            btn.classList.remove('copied');
+            btn.innerHTML='<i data-lucide="copy" class="w-3 h-3"></i> Copy';
+            lucide.createIcons();
+        },2000);
+    }).catch(()=>{
+        const ta=document.createElement('textarea');
+        ta.value=code;document.body.appendChild(ta);ta.select();
+        document.execCommand('copy');document.body.removeChild(ta);
+        toast('Code copied!');
+    });
+}
+
+function renderExam(){const mc=document.getElementById('mainContent');document.getElementById('examStatus').textContent='Yes';let html=`<div class="anim-reveal"><div class="flex items-center gap-3 mb-2"><span class="text-[10px] uppercase tracking-widest text-[#c6f91f]/70">Assessment</span></div><h1 class="font-geist text-xl sm:text-2xl font-light tracking-tight mb-2">${finalExam.title}</h1><p class="text-xs text-white/40 mb-8">Open-ended questions · Click each question to reveal the model answer</p>`;finalExam.parts.forEach((part,pi)=>{html+=`<div class="mb-10"><h2 class="text-sm font-medium text-[#c6f91f] mb-6 flex items-center gap-2"><span class="w-6 h-6 rounded bg-[#c6f91f]/10 flex items-center justify-center text-[10px] text-[#c6f91f]">${pi+1}</span>${part.name}</h2><div class="space-y-4">`;part.questions.forEach((q,qi)=>{const key='exam_'+pi+'_'+qi,open=examAnswers[key];html+=`<div class="border border-white/[0.05] rounded-lg bg-white/[0.01] overflow-hidden"><button onclick="toggleExamAnswer('${key}')" class="w-full text-left px-5 py-4 flex items-start gap-3 hover:bg-white/[0.01] transition-colors"><span class="text-xs text-white/30 mt-0.5 flex-shrink-0">${qi+1}.</span><p class="text-sm text-white/80 leading-relaxed flex-1">${q.q}</p><i data-lucide="chevron-down" class="w-4 h-4 text-white/20 flex-shrink-0 mt-0.5 transition-transform ${open?'rotate-180':''}"></i></button><div class="answer-reveal ${open?'open':''} px-5 border-t border-white/[0.05]"><div class="text-[10px] uppercase tracking-widest text-[#c6f91f]/50 mb-2">Model Answer</div><p class="text-sm text-white/70 leading-relaxed">${q.a}</p></div></div>`;});html+=`</div></div>`;});html+=`</div>`;mc.innerHTML=html;lucide.createIcons();}
+function toggleExamAnswer(key){examAnswers[key]=!examAnswers[key];renderExam();}
+
+renderSidebar();renderOverview();document.getElementById('quizDone').textContent='0/9';
+</script>
+</body>
+</html>
